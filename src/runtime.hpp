@@ -2,6 +2,20 @@
 #include "telemetry.hpp"
 
 namespace acc {
+// ACC may leave an old mapping at OFF or PAUSE across a mode/session switch.
+// Probe the named object again without erasing a legitimate paused snapshot.
+struct SharedReadHealth {
+ bool have=false;int packet=-1,status=-1,type=-1,index=-1;
+ uint64_t sampledAt=0,changedAt=0,nextProbe=0;unsigned reopens=0;
+ void observe(const Graphics& g,uint64_t now){
+  if(!have||packet!=g.packet||status!=g.status||type!=g.session||index!=g.sessionIndex)changedAt=now;
+  have=true;packet=g.packet;status=g.status;type=g.session;index=g.sessionIndex;sampledAt=now;
+ }
+ bool probeDue(uint64_t now,bool valid)const{return now>=nextProbe&&(status!=2||!valid);}
+};
+inline bool udpSessionSignal(const State& s,uint64_t now,uint64_t offlineSince=0){
+ return s.registered&&s.hasSession&&s.phase>0&&fresh(s.sessionReceived,now,8000)&&(!offlineSince||s.sessionReceived>offlineSince);
+}
 struct ReconnectPolicy {
  uint64_t next=0,started=0;unsigned failures=0,attempts=0;bool awaiting=false;
  bool due(uint64_t now)const{return !awaiting&&now>=next;}

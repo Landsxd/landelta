@@ -11,7 +11,7 @@ shim=r'''
 using HWND=int;using DWORD=unsigned;struct RECT{int left,top,right,bottom;};
 const int WS_EX_TOPMOST=1,WS_EX_TOOLWINDOW=2,WS_EX_LAYERED=4,WS_EX_NOACTIVATE=8,WS_EX_TRANSPARENT=16,GWL_EXSTYLE=1,HWND_TOPMOST=1,SWP_NOACTIVATE=2,SWP_FRAMECHANGED=4,SWP_NOMOVE=8,SWP_NOSIZE=16,SW_SHOWNOACTIVATE=4,SW_HIDE=0,FALSE=0,SM_XVIRTUALSCREEN=1,SM_YVIRTUALSCREEN=2,SM_CXVIRTUALSCREEN=3,SM_CYVIRTUALSCREEN=4;
 '''+s[s.index('constexpr int PanelCount'):s.index('Config cfg;')]+r'''
-uint64_t udpGeneration=0;Config cfg;acc::State live;acc::Graphics shared{};acc::SessionVisibility sessionVisibility;acc::SessionLaunch sessionLaunch;
+uint64_t udpGeneration=0,sharedOfflineAt=0;Config cfg;acc::State live;acc::Graphics shared{};acc::SessionVisibility sessionVisibility;acc::SessionLaunch sessionLaunch;
 HWND control=8,panels[PanelCount]={1,2,3,4,5,6,7};bool windows[9]{},sharedOffline=false,sharedOK=false,demoMode=false,gameRunning=false,locked=false,pedalTimer=false;unsigned mainInterval=0,mainTimer=0,inputTimer=0;int shows=0;
 bool paused(){return sharedOK&&shared.status==3;}
 int panelW(int){return 300;}int panelH(int){return 100;}
@@ -44,6 +44,10 @@ int main(){
  cfg.hidden=true;updateWindows();syncSessionVisibility(201100);assert(!windows[1]);live.session=9;syncSessionVisibility(201200);assert(windows[1]);
  live.elapsed=30000;syncSessionVisibility(201210);cfg.hidden=true;updateWindows();live.elapsed=0;syncSessionVisibility(201220);assert(windows[1]);
  cfg.hidden=true;updateWindows();++udpGeneration;syncSessionVisibility(201250);assert(windows[1]);
+ // OFF is not proof of menu when newer UDP data confirms an active session.
+ sharedOffline=true;sharedOfflineAt=201300;syncSessionVisibility(201300);assert(!windows[1]);
+ live.sessionReceived=201400;syncSessionVisibility(201400);assert(windows[1]);
+ syncSessionVisibility(210000);assert(!windows[1]);sharedOffline=false;
  gameRunning=false;syncSessionVisibility(201300);demoMode=true;updateWindows();assert(windows[1]&&inputTimer==33&&mainTimer==100);demoMode=false;updateWindows();assert(!windows[1]&&inputTimer==0&&mainTimer==1000);
  cfg.keepAfterRace=true;updateWindows();assert(windows[5]);cfg.hidden=true;updateWindows();assert(!windows[5]);cfg.hidden=false;cfg.visible[4]=false;updateWindows();assert(!windows[5]);
  std::cout<<"PASS: production visibility, idle timers, input timer stop/start, session lock, manual hide, reconnect, pause, menu, demo; no control focus or window activation\n";

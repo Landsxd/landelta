@@ -6,13 +6,13 @@
 
 Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands** para Windows. Información legible, paneles compactos y fondos transparentes para conducir con los datos que necesitas.
 
-**Beta 0.12.2 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
+**Beta 0.12.3 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
 
 > El proyecto está en desarrollo. Las pruebas de lógica usan transporte y ventanas simulados. No sustituyen una prueba de esta versión en ACC real bajo Windows.
 
 ## Descargar y empezar
 
-Abre la [beta v0.12.2](https://github.com/Landsxd/landelta/releases/tag/v0.12.2) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
+Abre la [beta v0.12.3](https://github.com/Landsxd/landelta/releases/tag/v0.12.3) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
 
 1. Extrae el ZIP en una carpeta fija y abre `LANDELTA.exe`.
 2. La primera vez, mantén ACC cerrado para preparar su conexión local. Si no encuentra Documentos, usa **Conexión → Elegir carpeta de ACC**.
@@ -46,6 +46,8 @@ Los paneles son independientes. Puedes moverlos, cambiar tamaño y opacidad, y a
 Tu auto utiliza memoria compartida local. Los demás pilotos llegan mediante el protocolo de broadcasting de ACC, tanto en sesiones offline como online cuando el juego los transmite. Al pasar de clasificación a carrera, las dos fuentes pueden cambiar en momentos distintos: tus tiempos continúan y LANDELTA espera la parrilla de la nueva sesión, descartando autos anteriores.
 
 Si faltan pilotos en una conexión ya configurada, prueba **Conexión → Reconectar**; conserva los tiempos de tu auto. Si indica que falta preparar la configuración, cierra ACC, pulsa **Reparar conexión de pilotos** y abre ACC de nuevo.
+
+**Corrección 0.12.3:** el estado de menú/pausa de la memoria no bloquea la conexión de pilotos. LANDELTA reabre lecturas detenidas y envía la baja UDP con su identificador. Al actualizar desde una versión anterior, cierra también ACC una vez para empezar sin conexiones antiguas. Si tienes inicio automático, desactívalo y vuelve a activarlo desde la nueva copia.
 
 Los relativos, gaps de carrera y predicciones marcados con `~` son estimaciones. `PEN` confirma una sanción del jugador; `!` es un aviso recibido y no confirma una sanción pendiente de otro piloto.
 

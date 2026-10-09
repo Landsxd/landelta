@@ -1,4 +1,4 @@
-LANDELTA ACC OVERLAY · BETA 0.12.2 · VALIDACIÓN
+LANDELTA ACC OVERLAY · BETA 0.12.3 · VALIDACIÓN
 ===========================================
 Ejecutable: LANDELTA.exe (Windows x64, aplicación GUI)
 Las descargas de GitHub Releases se compilan en un runner Windows.
@@ -55,3 +55,5 @@ Novedades 0.12: delta inválido sin cambiar referencia, instantánea aislada por
 0.12.1: ventana principal redimensionable/maximizable; escala proporcional y hit testing; minimizar conserva barra de tareas, X pasa a bandeja; tamaño persistente.
 
 0.12.2: transición clasificación/carrera en ambos órdenes, datos propios independientes de UDP, reconexión sin borrar memoria válida y recuperación de mapeo congelado aun con sesión UDP anterior. Prueba de regresión falló antes del arreglo y pasa después; ACC real pendiente.
+
+0.12.3: pruebas de memoria antigua en OFF/PAUSE, reapertura fallida sin datos falsamente válidos, 30 transiciones sin cerrar la suscripción UDP, registro independiente de OFF y paquete de baja con ID. Las regresiones de bloqueo UDP y baja incompleta fallaron antes de sus correcciones. Pruebas completas y compilación aprobadas; ACC real pendiente.
