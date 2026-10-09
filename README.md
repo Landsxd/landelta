@@ -6,13 +6,13 @@
 
 Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands** para Windows. Información legible, paneles compactos y fondos transparentes para conducir con los datos que necesitas.
 
-**Beta 0.12 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
+**Beta 0.12.1 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
 
 > El proyecto está en desarrollo. Las pruebas de lógica usan transporte y ventanas simulados. No sustituyen una prueba de esta versión en ACC real bajo Windows.
 
 ## Descargar y empezar
 
-Abre la [beta v0.12.0](https://github.com/Landsxd/landelta/releases/tag/v0.12.0) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
+Abre la [beta v0.12.1](https://github.com/Landsxd/landelta/releases/tag/v0.12.1) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
 
 1. Extrae el ZIP en una carpeta fija y abre `LANDELTA.exe`.
 2. La primera vez, mantén ACC cerrado para preparar su conexión local. Si no encuentra Documentos, usa **Conexión → Elegir carpeta de ACC**.
@@ -55,7 +55,7 @@ Los relativos, gaps de carrera y predicciones marcados con `~` son estimaciones.
 | `Ctrl + Alt + F11` | Mostrar / ocultar overlays. |
 | `Ctrl + Alt + F12` | Abrir el control. |
 
-Cerrar con **X** deja la app en segundo plano. Para terminarla, usa el icono junto al reloj → **Salir de LANDELTA**. **Mostrar overlays al entrar en sesión** viene activado; una sesión nueva vuelve a mostrar los paneles habilitados.
+La ventana principal permite **maximizar y redimensionar desde los bordes**, y recuerda su tamaño. Minimizar la mantiene en la **barra de tareas**. Cerrar con **X** deja la app en segundo plano. Para terminarla, usa el icono junto al reloj → **Salir de LANDELTA**. **Mostrar overlays al entrar en sesión** viene activado; una sesión nueva vuelve a mostrar los paneles habilitados.
 
 ## Reportar un problema
 
