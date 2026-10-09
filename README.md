@@ -6,13 +6,13 @@
 
 Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands** para Windows. Información legible, paneles compactos y fondos transparentes para conducir con los datos que necesitas.
 
-**Beta 0.11 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
+**Beta 0.12 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
 
 > El proyecto está en desarrollo. Las pruebas de lógica usan transporte y ventanas simulados. No sustituyen una prueba de esta versión en ACC real bajo Windows.
 
 ## Descargar y empezar
 
-Abre la [beta v0.11.0](https://github.com/Landsxd/landelta/releases/tag/v0.11.0) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
+Abre la [beta v0.12.0](https://github.com/Landsxd/landelta/releases/tag/v0.12.0) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
 
 1. Extrae el ZIP en una carpeta fija y abre `LANDELTA.exe`.
 2. La primera vez, mantén ACC cerrado para preparar su conexión local. Si no encuentra Documentos, usa **Conexión → Elegir carpeta de ACC**.
@@ -76,7 +76,7 @@ El resultado es `LANDELTA.exe` en la raíz del proyecto. El ejecutable distribui
 
 - [Guía de contribución](CONTRIBUTING.md)
 - [Instrucciones completas de uso](LEEME.txt)
-- [Cambios de la beta 0.11](CAMBIOS-0.11.txt)
+- [Cambios de la beta 0.12](CAMBIOS-0.12.txt)
 - [Qué se ha validado y sus límites](VALIDACION.txt)
 - [Cómo publicar la beta](docs/PUBLISHING.md)
 
@@ -87,3 +87,11 @@ El flujo de GitHub Actions incluye pruebas de lógica e integración simulada en
 Desarrollo: **Lands**. Nombre anterior: Vortex ACC Overlay.
 
 Las dependencias conservan sus avisos en [`vendor/JSON-LICENSE.txt`](vendor/JSON-LICENSE.txt) y [`licenses/`](licenses/). Proyecto independiente, sin afiliación con Kunos, Assetto Corsa Competizione, RaceLab ni SRO.
+
+### Delta e imágenes del historial
+
+En **Paneles**, usa **Delta − / +** (50–250%) o la rueda sobre el delta desbloqueado. El tamaño general también se aplica. Activa **Fuera de sesión** para ver los paneles sin modo demo; el delta conserva el último dato como **Δ FIN**. F11 sigue permitiendo ocultarlos.
+
+En vueltas inválidas, el delta sigue comparando: mejora amarilla, pérdida roja. La referencia propia siempre procede de una vuelta limpia.
+
+En **Historial → Circuito → Sesión → Exportar PNG**, elige dónde guardar todas las vueltas y sectores. Las sesiones de más de 40 vueltas se dividen en imágenes numeradas.

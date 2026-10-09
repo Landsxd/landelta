@@ -45,6 +45,7 @@ int main(){
  live.elapsed=30000;syncSessionVisibility(201210);cfg.hidden=true;updateWindows();live.elapsed=0;syncSessionVisibility(201220);assert(windows[1]);
  cfg.hidden=true;updateWindows();++udpGeneration;syncSessionVisibility(201250);assert(windows[1]);
  gameRunning=false;syncSessionVisibility(201300);demoMode=true;updateWindows();assert(windows[1]&&inputTimer==33&&mainTimer==100);demoMode=false;updateWindows();assert(!windows[1]&&inputTimer==0&&mainTimer==1000);
+ cfg.keepAfterRace=true;updateWindows();assert(windows[5]);cfg.hidden=true;updateWindows();assert(!windows[5]);cfg.hidden=false;cfg.visible[4]=false;updateWindows();assert(!windows[5]);
  std::cout<<"PASS: production visibility, idle timers, input timer stop/start, session lock, manual hide, reconnect, pause, menu, demo; no control focus or window activation\n";
 }
 '''

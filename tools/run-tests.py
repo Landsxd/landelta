@@ -13,7 +13,7 @@ cpp_tests = (
     "test_driving", "test_lap_delta", "test_background",
 )
 python_tests = (
-    "test_connection_loop", "test_settings", "test_background_loop", "test_startup",
+    "test_connection_loop", "test_settings", "test_background_loop", "test_startup", "test_history_export",
 )
 
 with tempfile.TemporaryDirectory(prefix="landelta-tests-") as directory:

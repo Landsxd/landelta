@@ -9,7 +9,7 @@ if errorlevel 1 (
 )
 windres -I src src/app.rc -o app-res.o
 if errorlevel 1 exit /b 1
-g++ -std=c++17 -O2 -Wall -Wextra -Wno-misleading-indentation -I vendor src/main.cpp app-res.o -o LANDELTA.exe -municode -mwindows -static -static-libgcc -static-libstdc++ -lgdiplus -lws2_32 -lshell32 -lole32 -luuid -luser32 -lgdi32
+g++ -std=c++17 -O2 -Wall -Wextra -Wno-misleading-indentation -I vendor src/main.cpp app-res.o -o LANDELTA.exe -municode -mwindows -static -static-libgcc -static-libstdc++ -lcomdlg32 -lgdiplus -lws2_32 -lshell32 -lole32 -luuid -luser32 -lgdi32
 if errorlevel 1 exit /b 1
 del app-res.o
 echo Listo: LANDELTA.exe

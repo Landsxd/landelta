@@ -15,7 +15,7 @@ int main(){
  // Native ACC fields can be absent: compare actual elapsed times by position.
  s.g.bestMs=s.g.estimatedMs=0;s.tick(1,.5f,curve(.5f,98000));assert(s.view().available&&std::abs(s.view().ms+800)<=1);
  s.tick(1,.51f,curve(.51f)+423);assert(s.view().available&&std::abs(s.view().ms-423)<=1);
- s.g.valid=0;s.tick(1,.52f,curve(.52f));assert(!s.view().available);s.g.valid=1;s.g.lastMs=85000;s.tick(2,0,0);assert(s.delta.best==100000);
+ s.g.valid=0;s.tick(1,.52f,curve(.52f));assert(s.view().available&&s.view().invalid);s.g.valid=1;s.g.lastMs=85000;s.tick(2,0,0);assert(s.delta.best==100000);
  s.finish(2,98000);assert(s.delta.best==98000);s.tick(3,.5f,curve(.5f));assert(std::abs(s.view().ms-800)<=1);
  s.g.status=3;s.tick(3,.5f,curve(.5f));assert(!s.view().available&&s.delta.best==98000);s.g.status=2;s.tick(3,.51f,curve(.51f));assert(s.view().available);
  s.g.inPitLane=1;s.tick(3,.52f,curve(.52f));assert(!s.view().available);s.g.inPitLane=0;

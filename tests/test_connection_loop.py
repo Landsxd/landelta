@@ -36,7 +36,7 @@ const void* MapViewOfFile(HANDLE h,int,int,int,size_t){return h;}void UnmapViewO
 std::wstring wide(const std::string& s){return std::wstring(s.begin(),s.end());}
 std::array<uint64_t,9> udpReceived{},udpAccepted{},udpRejected{};uint64_t udpGeneration=0;uint64_t gatedCars=0,gridWaitAt=0,lastCarPacket=0;std::wstring protocolError;int gridRecoveries=0;
 Analytics analytics;bool analyticsTrackReady=false,demoMode=false;int64_t wallMs(){return 1791309600000LL;}
-State live;Graphics shared{};PlayerTiming playerTiming;LapDelta lapDelta;ReconnectPolicy retry;SOCKET sock=INVALID_SOCKET;
+State live;Graphics shared{};PlayerTiming playerTiming;LapDelta lapDelta;DeltaSnapshot retainedDelta;ReconnectPolicy retry;SOCKET sock=INVALID_SOCKET;
 HANDLE inputMapping=nullptr;const void* inputView=nullptr;PedalState pedals;uint64_t inputRetryAt=0;
 HANDLE mapping=nullptr;const void* view=nullptr;bool sharedOK=false,sharedOffline=false,gameRunning=true,configReady=true;
 int port=9000,scroll=0,networkReconnects=0,sessionResets=0,rejectedPackets=0;std::string password;

@@ -1,4 +1,4 @@
-LANDELTA ACC OVERLAY · BETA 0.11 · VALIDACIÓN
+LANDELTA ACC OVERLAY · BETA 0.12 · VALIDACIÓN
 ===========================================
 Ejecutable: LANDELTA.exe (Windows x64, aplicación GUI)
 Las descargas de GitHub Releases se compilan en un runner Windows.
@@ -7,7 +7,7 @@ con distintas versiones de MinGW pueden producir binarios diferentes.
 
 VALIDADO EN ESTA VERSIÓN
 • Compilación MinGW-w64 C++17 con -O2 -Wall -Wextra: sin advertencias.
-• Recurso Windows: icono LANDELTA, manifest y versión 0.11.
+• Recurso Windows: icono LANDELTA, manifest y versión 0.12.
 • Runtime del compilador enlazado estáticamente; dependencias del sistema
   Windows para interfaz, gráficos, sockets y COM. La lista concreta cambia
   según la variante de MinGW utilizada.
@@ -49,3 +49,5 @@ La traza de delta interpola entre muestras a 100 ms solicitados. Milésimas
 mostradas son resolución de presentación, no garantía de exactitud de 1 ms.
 Se necesita una vuelta limpia completa observada desde el inicio. El
 historial guardado no se utiliza como referencia de delta en otra sesión.
+
+Novedades 0.12: delta inválido sin cambiar referencia, instantánea aislada por sesión, tamaño y visibilidad persistentes, exportación PNG paginada. Pruebas simuladas; ACC real pendiente.

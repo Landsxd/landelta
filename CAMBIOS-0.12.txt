@@ -1,0 +1,7 @@
+LANDELTA · BETA 0.12
+
+• Tamaño propio del delta (50–250%), botones y rueda al desbloquear.
+• Opción Fuera de sesión; último delta marcado Δ FIN.
+• Delta en vueltas inválidas: mejoras amarillas, pérdidas rojas; referencia limpia preservada.
+• Exportación local de todas las vueltas y sectores del historial a PNG (40 vueltas por imagen).
+• Conserva ajustes e historial anteriores.

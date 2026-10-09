@@ -18,6 +18,7 @@ int main(){
  assert(s.update(300000,true,false,true,false)); // pause with valid shared snapshot
  assert(!s.update(299999,true,false,false,false)); // reject backwards clock
  assert(s.show(true,false,true));assert(!s.show(true,true,true)); // deliberate demo / F11
+ assert(s.show(false,false,true,true));assert(!s.show(false,true,true,true));assert(!s.show(false,false,false,true));
  assert(backgroundPollInterval(false,false)==1000&&backgroundPollInterval(true,false)==100&&backgroundPollInterval(false,true)==100);
  std::cout<<"PASS: boot, loading, menu, shared/UDP session, dropouts, pause, restart, game close, hidden/disabled panels, demo and idle polling\n";
 }

@@ -20,13 +20,23 @@ struct PedalState {
   next.gas=std::clamp(next.gas,0.f,1.f);next.brake=std::clamp(next.brake,0.f,1.f);value=next;have=true;valid=!expired(now);
  }
 };
-struct DeltaView {bool available=false;int ms=0;};
+struct DeltaView {bool available=false;int ms=0;bool invalid=false;};
+// Retain only a labelled last-session value; never feed it back into telemetry.
+struct DeltaSnapshot {
+ DeltaView value{};bool have=false;uint64_t epoch=0;int player=-1,session=-1,index=-1,laps=0,currentMs=0;
+ void observe(const Graphics& g,uint64_t generation,DeltaView fresh,bool live){
+  if(!live)return;
+  if(!have||generation!=epoch||g.player!=player||g.session!=session||g.sessionIndex!=index||g.laps<laps||(g.laps==laps&&double(g.currentMs)+1500<currentMs))value={};
+  have=true;epoch=generation;player=g.player;session=g.session;index=g.sessionIndex;laps=g.laps;currentMs=g.currentMs;
+  if(fresh.available)value=fresh;
+ }
+};
 inline DeltaView drivingDelta(const PlayerTiming& timing,uint64_t now){
  const auto& g=timing.g;DeltaView v;
- if(!timing.valid||timing.expired(now)||g.status!=2||g.inPit||g.inPitLane||!g.valid||!timeValue(g.bestMs)||g.currentMs<=0||g.deltaMs==INT32_MAX||g.deltaMs==INT32_MIN||g.deltaPositive<0||g.deltaPositive>1)return v;
+ if(!timing.valid||timing.expired(now)||g.status!=2||g.inPit||g.inPitLane||!timeValue(g.bestMs)||g.currentMs<=0||g.deltaMs==INT32_MAX||g.deltaMs==INT32_MIN||g.deltaPositive<0||g.deltaPositive>1)return v;
  // ACC supplies a magnitude and a separate sign. Keep the millisecond precision.
  int64_t magnitude=std::abs(int64_t(g.deltaMs));if(magnitude>3600000)return v;
- v.available=true;v.ms=int(magnitude)*(g.deltaPositive?1:-1);return v;
+ v.available=true;v.invalid=!g.valid;v.ms=int(magnitude)*(g.deltaPositive?1:-1);return v;
 }
 // Keep a time/distance trace of the fastest complete clean lap observed locally.
 // Compare elapsed time at the same spline location, never a linear lap estimate.
@@ -65,12 +75,12 @@ struct LapDelta {
  }
  DeltaView view(const PlayerTiming& timing,uint64_t now)const{
   DeltaView v;const auto& g=timing.g;
-  if(reference.size()<2||!have||!timing.valid||timing.expired(now)||g.status!=2||!g.valid||g.inPit||g.inPitLane||g.currentMs<=0||g.player!=last.player||g.session!=last.session||g.sessionIndex!=last.sessionIndex)return v;
+  if(reference.size()<2||!have||!timing.valid||timing.expired(now)||g.status!=2||g.inPit||g.inPitLane||g.currentMs<=0||g.player!=last.player||g.session!=last.session||g.sessionIndex!=last.sessionIndex)return v;
   auto hi=std::lower_bound(reference.begin(),reference.end(),g.spline,[](const Point& p,float x){return p.spline<x;});
   if(hi==reference.end())return v;
   double expected=hi->ms;
   if(hi!=reference.begin()){auto lo=hi-1;double width=hi->spline-lo->spline;if(width<=0||width>.031)return v;expected=lo->ms+(hi->ms-lo->ms)*(g.spline-lo->spline)/width;}
-  double diff=g.currentMs-expected;if(std::abs(diff)>3600000)return v;v.available=true;v.ms=int(std::llround(diff));return v;
+  double diff=g.currentMs-expected;if(std::abs(diff)>3600000)return v;v.available=true;v.invalid=!g.valid;v.ms=int(std::llround(diff));return v;
  }
 };
 struct SectorReview {RecordedLap lap;bool hasReference=false;int referenceLap=0;std::array<int,3> difference{};std::array<bool,3> comparable{};};

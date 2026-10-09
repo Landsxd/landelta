@@ -11,7 +11,7 @@ struct SessionVisibility {
   else if(active&&(now<lastSignal||now-lastSignal>=3000))active=false;
   return active;
  }
- bool show(bool demo,bool hidden,bool enabled)const{return enabled&&!hidden&&(demo||active);}
+ bool show(bool demo,bool hidden,bool enabled,bool manual=false)const{return enabled&&!hidden&&(demo||active||manual);}
 };
 // Learn each source independently: a late UDP registration is not a new race.
 struct SessionLaunch {
