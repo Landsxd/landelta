@@ -17,6 +17,9 @@ inline bool gridTimedOut(uint64_t now,uint64_t started,uint64_t lastCar,bool reg
 }
 
 inline int broadcastSession(int sharedType){switch(sharedType){case 0:return 0;case 1:return 4;case 2:return 10;case 3:return 11;case 7:return 12;case 8:return 13;default:return -1;}}
+// The two ACC feeds switch sessions independently. A mismatch gates grid/history,
+// never a coherent shared-memory sample or its expiry/recovery checks.
+inline bool compatibleSessions(int sharedType,int broadcastType){int type=broadcastSession(sharedType);return type<0||type==broadcastType||(type==4&&broadcastType==9);}
 enum class SharedChange {None,Session,LapReset,Offline};
 struct PlayerTiming {
  Graphics g{};std::array<int,3> current{},previous{};

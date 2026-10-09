@@ -59,18 +59,18 @@ int main(){
  // Going to the menu clears all data and suppresses connection retries.
  mapped.status=0;mapped.player=-1;pollShared(20000);int count=opened;pollUDP(100000);assert(opened==count&&sharedOffline&&live.cars.empty()&&!sharedOK);
  mapped={};mapped.packet=1;mapped.status=2;mapped.session=2;mapped.player=7;mapped.valid=1;pollShared(100100);assert(sharedOK&&!sharedOffline);pollUDP(100100);handshake(100200);
- // After a UDP boundary the old memory packet cannot repopulate old timing.
- pollShared(100300);assert(!sharedOK);mapped.packet++;pollShared(100400);assert(sharedOK);
+ // UDP registration does not erase independently validated own timing.
+ pollShared(100300);assert(sharedOK);mapped.packet++;pollShared(100400);assert(sharedOK);
  // A pinned, frozen shared mapping must stay invalid after being reopened.
  pollShared(103400);assert(!sharedOK);pollShared(103500);assert(!sharedOK);mapped.packet++;pollShared(103600);assert(sharedOK);
- // A local session restart also flushes the old broadcast grid.
- mapped.packet++;mapped.sessionIndex=2;pollShared(103700);assert(live.cars.empty()&&!live.registered&&sharedOK);
+ // A local same-type boundary keeps a healthy UDP subscription.
+ mapped.packet++;mapped.sessionIndex=2;pollShared(103700);assert(live.cars.empty()&&live.registered&&sharedOK);
  pollUDP(103800);handshake(103900);mapped.packet++;pollShared(104000);mapped.status=3;pollShared(104100);pollUDP(200000);assert(live.registered); // no false timeout while paused
  // Exercise the production analytics hook, including track and own-player gates.
  analytics.endSession();live.clearSession();analyticsTrackReady=false;
  queue(session(1,1,1000));queue(track(1,"Monza",42));queue(car(7,0));pollUDP(200100);
  assert(analytics.trackers.count(7)&&analytics.history.empty());
- sharedOK=true;shared.status=2;shared.player=7;queue(car(7,1));pollUDP(200200);
+ sharedOK=true;shared.status=2;shared.session=2;shared.player=7;queue(car(7,1));pollUDP(200200);
  assert(analytics.history.size()==1&&analytics.history[0].laps.size()==1);
  queue(car(7,1));pollUDP(200300);assert(analytics.history[0].laps.size()==1);
  demoMode=true;queue(car(7,2));pollUDP(200400);assert(analytics.history[0].laps.size()==1);
@@ -85,6 +85,25 @@ int main(){
  // A malformed car packet is counted separately from missing UDP traffic.
  Writer malformed;malformed.put<uint8_t>(3);queue(malformed);pollUDP(210200);
  assert(udpRejected[3]==1&&!protocolError.empty());
+ // Regression: qualifying -> race, with the shared-memory change arriving first.
+ reconnect();closeMapping();mapped={};mapped.packet=1;mapped.status=2;mapped.player=7;mapped.valid=1;mapped.session=1;mapped.sessionIndex=1;
+ pollShared(220000);pollUDP(220000);queue(registered());queue(session(2,1,90000,false,4));queue(track(1,"Monza",42));queue(entry());queue(car(7,3));pollUDP(220100);
+ mapped.packet++;mapped.laps=3;mapped.currentMs=50000;pollShared(220200);assert(sharedOK);
+ int transitionConnections=opened;mapped.packet++;mapped.session=2;mapped.sessionIndex=2;mapped.laps=0;mapped.currentMs=0;
+ pollShared(220300);assert(sharedOK&&shared.session==2&&shared.laps==0);assert(live.registered&&opened==transitionConnections&&live.cars.empty());
+ queue(session(2,1,91000,false,4));queue(car(7,4));pollUDP(220400);assert(sharedOK&&live.active(220400).empty());
+ queue(session(2,2,0,false,10,2));queue(track(1,"Monza",42));queue(entry());queue(car(7,0));pollUDP(220500);
+ assert(sharedOK&&live.registered&&live.type==10&&live.active(220500).size()==1&&opened==transitionConnections);
+ // The broadcast change can arrive first too; it must not erase readable own timing.
+ mapped.packet++;mapped.laps=2;mapped.currentMs=50000;pollShared(220600);
+ queue(session(2,3,0,false,4));pollUDP(220700);assert(sharedOK&&shared.session==2);
+ mapped.packet++;mapped.session=1;mapped.sessionIndex=3;mapped.laps=0;mapped.currentMs=0;pollShared(220800);
+ queue(track(1,"Monza",42));queue(car(7,0));pollUDP(220900);assert(sharedOK&&live.registered&&live.type==4&&live.active(220900).size()==1);
+ // Manual reconnect only restarts UDP, including when called repeatedly.
+ for(int k=0;k<3;k++){int packet=playerTiming.g.packet;reconnect();assert(sharedOK&&playerTiming.valid&&playerTiming.g.packet==packet);pollUDP(221000+k*100);queue(registered());queue(session(2,3,1000+k*100,false,4));queue(track(1,"Monza",42));queue(car(7,0));pollUDP(221050+k*100);assert(live.registered&&sharedOK);}
+ // A stalled old-session UDP heartbeat cannot pin a frozen shared mapping forever.
+ queue(session(2,4,1500,false,10));pollUDP(221500);pollShared(224000);assert(!sharedOK);mapped.packet++;mapped.session=2;mapped.sessionIndex=4;pollShared(224100);assert(sharedOK);
+ std::cout<<"PASS: qualifying/race boundaries in both arrival orders, delayed old-session cars, manual reconnection without losing own timing, stale-memory recovery\n";
  std::cout<<"PASS: stalled-grid recovery despite healthy session heartbeats, grid restored, packet diagnostics\n";
  std::cout<<"PASS: production analytics routing, metadata gate, own-player gate, duplicates and demo isolation\n";
  std::cout<<"PASS: production UDP/memory loops: handshake, timeout recovery, queue draining, socket errors, auth rejection, menu, stale mappings, session restart, pause\n";

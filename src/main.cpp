@@ -61,6 +61,7 @@ void captureAnalytics(int kind,unsigned packetType,const char* packet,int size,u
  if(kind==12)analyticsTrackReady=false;
  if(kind>0&&packetType==5)analyticsTrackReady=true;
  if(demoMode||!analyticsTrackReady||live.replay)return;
+ if(sharedOK&&(shared.status==2||shared.status==3)&&live.hasSession&&!acc::compatibleSessions(shared.session,live.type))return;
  if(kind==3&&size>=3){int id=(uint8_t)packet[1]|((uint8_t)packet[2]<<8);int player=sharedOK&&(shared.status==2||shared.status==3)?shared.player:-1;analytics.observe(live,id,player,now,wallMs());}
 }
 
@@ -97,11 +98,10 @@ void pollInputs(uint64_t now){
  if(!inputView)return;acc::PhysicsInput p{};bool coherent=false;for(int i=0;i<3;i++){int before;memcpy(&before,inputView,4);MemoryBarrier();memcpy(&p,inputView,sizeof p);MemoryBarrier();int after;memcpy(&after,inputView,4);if(before==after&&p.packet==before){coherent=true;break;}}if(!coherent){pedals.valid=false;return;}pedals.update(p,now);
  if(pedals.expired(now)){int packet=pedals.value.packet;closeInputs();pedals.waitForPacket(packet);inputRetryAt=now+250;}
 }
-void resetPlayerTiming(){closeInputs();playerTiming.waitForPacket(shared.packet);sharedOK=false;shared={};}
 void closeMapping(){lapDelta.interrupt();closeInputs();if(view)UnmapViewOfFile(view);if(mapping)CloseHandle(mapping);view=nullptr;mapping=nullptr;sharedOK=false;shared={};playerTiming.reset();sharedOffline=false;}
 bool sendPacket(const acc::Writer& w){return sock!=INVALID_SOCKET&&::send(sock,(const char*)w.b.data(),(int)w.b.size(),0)==(int)w.b.size();}
 void closeSocket(){if(sock!=INVALID_SOCKET){if(live.registered){acc::Writer w;w.put<uint8_t>(9);sendPacket(w);}closesocket(sock);}sock=INVALID_SOCKET;live.registered=false;}
-void reconnect(){analytics.disconnect();analyticsTrackReady=false;closeSocket();live={};retry={};lastEntry=0;connectedAt=0;gridWaitAt=lastCarPacket=0;scroll=-1;networkError.clear();resetPlayerTiming();++networkReconnects;}
+void reconnect(){analytics.disconnect();analyticsTrackReady=false;closeSocket();live={};retry={};lastEntry=0;connectedAt=0;gridWaitAt=lastCarPacket=0;scroll=-1;networkError.clear();++networkReconnects;}
 void failUDP(uint64_t now,const std::wstring& reason){analytics.disconnect();analyticsTrackReady=false;closeSocket();live={};lastEntry=0;connectedAt=0;gridWaitAt=lastCarPacket=0;networkError=reason;retry.failed(now);++networkReconnects;}
 bool openSocket(){sock=socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);if(sock==INVALID_SOCKET)return false;u_long nonblock=1;if(ioctlsocket(sock,FIONBIO,&nonblock)==SOCKET_ERROR){closeSocket();return false;}int size=1048576;setsockopt(sock,SOL_SOCKET,SO_RCVBUF,(char*)&size,sizeof size);sockaddr_in a{};a.sin_family=AF_INET;a.sin_addr.s_addr=htonl(INADDR_LOOPBACK);a.sin_port=htons((u_short)port);if(connect(sock,(sockaddr*)&a,sizeof a)==SOCKET_ERROR){closeSocket();return false;}return true;}
 void pollShared(uint64_t now){
@@ -110,9 +110,9 @@ void pollShared(uint64_t now){
  if(!view)return;acc::Graphics g{};bool coherent=false;for(int i=0;i<3;i++){int before;memcpy(&before,view,4);MemoryBarrier();memcpy(&g,view,sizeof g);MemoryBarrier();int after;memcpy(&after,view,4);if(before==after&&g.packet==before){coherent=true;break;}}if(!coherent){sharedOK=false;return;}
  bool wasOffline=sharedOffline;sharedOffline=g.status==0;
  if(sharedOffline){lapDelta.reset();if(!wasOffline){analytics.endSession();reconnect();lastReset=L"Salida de la sesión / menú";++sessionResets;}playerTiming.reset();shared={};sharedOK=false;return;}
- int st=acc::broadcastSession(g.session);if(g.status!=1&&live.hasSession&&acc::fresh(live.sessionReceived,now)&&st>=0&&st!=live.type&&!(st==4&&live.type==9)){sharedOK=false;return;}
  auto change=playerTiming.update(g,now);sharedOK=playerTiming.valid;shared=sharedOK?g:acc::Graphics{};
- if(change==acc::SharedChange::Session){analytics.endSession();auto current=playerTiming;reconnect();playerTiming=current;sharedOK=current.valid;shared=sharedOK?current.g:acc::Graphics{};lastReset=L"Cambio de sesión detectado en ACC";++sessionResets;}
+ if(change==acc::SharedChange::Session){analytics.endSession();lapDelta.reset();scroll=-1;auto car=live.cars.find(g.player);if(!acc::compatibleSessions(g.session,live.type)||(car!=live.cars.end()&&car->second.laps>g.laps)){live.cars.clear();live.passages.clear();live.focus=-1;}lastReset=L"Cambio de sesión local · UDP conservado";++sessionResets;}
+ if(sharedOK&&g.status!=1&&live.hasSession&&!acc::compatibleSessions(g.session,live.type)){live.cars.clear();live.passages.clear();live.focus=-1;}
  lapDelta.observe(playerTiming,now);
  auto delta=lapDelta.view(playerTiming,now);if(!delta.available)delta=acc::drivingDelta(playerTiming,now);retainedDelta.observe(shared,live.epoch,delta,sharedOK&&shared.status==2&&!live.replay);
  if(playerTiming.expired(now)){int packet=playerTiming.g.packet;closeMapping();playerTiming.waitForPacket(packet);} // Release stale handles; reject the same frozen snapshot after reopening.
@@ -123,10 +123,10 @@ void pollUDP(uint64_t now){
  if(sock==INVALID_SOCKET){if(!retry.due(now))return;retry.begin(now);if(!openSocket()||!sendPacket(acc::registration(password))){failUDP(now,L"No se pudo abrir UDP local; reintentando");return;}}
  // Drain queued data before checking deadlines, avoiding false reconnects under load.
  char b[65536];for(int i=0;i<512;i++){int n=recv(sock,b,sizeof b,0);if(n==SOCKET_ERROR){int e=WSAGetLastError();if(e!=WSAEWOULDBLOCK)failUDP(now,L"UDP "+std::to_wstring(e)+L"; reintentando");break;}if(!n)continue;
-  unsigned type=(uint8_t)b[0];if(type<udpReceived.size())++udpReceived[type];if(type!=1&&!live.registered)continue;if(type==3&&(!live.hasSession||!acc::fresh(live.sessionReceived,now,8000))){++gatedCars;continue;}
+  unsigned type=(uint8_t)b[0];if(type<udpReceived.size())++udpReceived[type];if(type!=1&&!live.registered)continue;if(type==3&&(!live.hasSession||!acc::fresh(live.sessionReceived,now,8000)||(sharedOK&&(shared.status==2||shared.status==3)&&!acc::compatibleSessions(shared.session,live.type)))){++gatedCars;continue;}
   bool hadSession=live.hasSession;int kind=live.parse((uint8_t*)b,n,now);if(kind<0){++rejectedPackets;if(type<udpRejected.size())++udpRejected[type];protocolError=L"Paquete "+std::to_wstring(type)+L": "+wide(live.parseError);continue;}if(kind>0&&type<udpAccepted.size())++udpAccepted[type];if(kind==3){lastCarPacket=now;networkError.clear();}
   if(kind==1){if(!live.registered){auto reason=wide(live.error);failUDP(now,L"ACC rechazó la conexión: "+reason);break;}retry.connected();connectedAt=gridWaitAt=now;lastCarPacket=0;live.received=now;networkError.clear();requestMetadata(now);}
-  if(kind==12){if(hadSession){lapDelta.reset();++udpGeneration;}gridWaitAt=now;lastCarPacket=0;resetPlayerTiming();scroll=-1;lastReset=wide(live.resetReason);++sessionResets;requestMetadata(now);}
+  if(kind==12){if(hadSession){analytics.endSession();lapDelta.reset();++udpGeneration;}gridWaitAt=now;lastCarPacket=0;scroll=-1;lastReset=wide(live.resetReason);++sessionResets;requestMetadata(now);}
   captureAnalytics(kind,type,b,n,now);
  }
  if(sock==INVALID_SOCKET)return;
@@ -152,6 +152,7 @@ void updateStatus(uint64_t now){
  if(!configReady){status=sharedOK?L"Tiempos activos · falta configurar pilotos":L"Preparar conexión de ACC";return;}
  if(paused()){status=L"ACC en pausa · tiempos detenidos";return;}
  auto cars=live.active(now);
+ if(sharedOK&&live.hasSession&&!acc::compatibleSessions(shared.session,live.type)){status=L"Tu auto conectado · esperando nueva sesión UDP";return;}
  if(live.registered&&acc::fresh(live.sessionReceived,now)&&!cars.empty()){status=(live.replay?L"ACC replay · ":L"ACC conectado · ")+std::to_wstring(cars.size())+L" pilotos";return;}
  if(!networkError.empty()){status=networkError;return;}
  if(live.registered){status=L"UDP registrado · esperando pilotos de ACC";return;}
@@ -212,7 +213,7 @@ void renderHistory(Graphics& g){
  button(g,L"←",28,574,49,31,51);text(g,historyTotal?std::to_wstring(historyOffset+1)+L"–"+std::to_wstring(std::min(historyTotal,historyOffset+historyPageSize))+L" de "+std::to_wstring(historyTotal):L"Sin sesiones",84,574,450,31,12,MUTED,FontStyleRegular,StringAlignmentCenter);button(g,L"→",579,574,49,31,52);
 }
 
-void renderControl(Graphics& g){g.Clear(BG);hits.clear();fill(g,28,28,6,41,GREEN);text(g,L"LANDELTA",46,19,350,37,28,FG,FontStyleBold);text(g,L"ACC OVERLAY  /  BETA 0.12.1",48,57,400,20,13,MUTED,FontStyleBold);tag(g,demoMode?L"DEMO":L"WINDOWS x64",503,30,125,demoMode?GOLD:GREEN);
+void renderControl(Graphics& g){g.Clear(BG);hits.clear();fill(g,28,28,6,41,GREEN);text(g,L"LANDELTA",46,19,350,37,28,FG,FontStyleBold);text(g,L"ACC OVERLAY  /  BETA 0.12.2",48,57,400,20,13,MUTED,FontStyleBold);tag(g,demoMode?L"DEMO":L"WINDOWS x64",503,30,125,demoMode?GOLD:GREEN);
  fill(g,28,92,600,76,CARD);fill(g,44,111,7,7,demoMode?GOLD:(live.registered?GREEN:BLUE));text(g,status,61,102,550,29,16,FG,FontStyleBold);text(g,demoMode?L"Prueba el diseño y acomoda tus paneles sin abrir el juego.":configStatus,45,133,565,23,14,MUTED);
  button(g,L"Paneles",28,185,112,36,1,false,page==0);button(g,L"Conexión",150,185,112,36,2,false,page==1);button(g,L"Historial",272,185,112,36,4,false,page==3);button(g,L"Inicio",394,185,112,36,5,false,page==4);button(g,L"Ayuda",516,185,112,36,3,false,page==2);
  if(page==0){section(g,L"PANELES INDEPENDIENTES · ACTIVA SOLO LO QUE NECESITES",235);const wchar_t* titles[]={L"Clasi",L"Relativos",L"Vuelta / sectores",L"Pedales",L"Delta",L"Últimos sectores",L"Ritmo / alcance"};for(int i=0;i<PanelCount;i++){float x=28.f+(i%2)*306,y=263.f+(i/2)*48;fill(g,x,y,294,42,CARD);text(g,titles[i],x+10,y,189,42,16,FG,FontStyleBold);button(g,cfg.visible[i]?L"ON":L"OFF",x+210,y+7,72,28,10+i,false,cfg.visible[i]);}
@@ -330,7 +331,7 @@ bool waitInTray(){if(!hideControl())return false;demoMode=false;updateStatus(now
 void action(int id);
 void trayMenu(){HMENU menu=CreatePopupMenu();if(!menu)return;AppendMenuW(menu,MF_STRING,70,L"Abrir LANDELTA");AppendMenuW(menu,MF_STRING,71,cfg.hidden?L"Mostrar overlays":L"Ocultar overlays");AppendMenuW(menu,MF_STRING,5,L"Inicio con Windows…");AppendMenuW(menu,MF_SEPARATOR,0,nullptr);AppendMenuW(menu,MF_STRING,63,L"Salir de LANDELTA");POINT point{};GetCursorPos(&point);SetForegroundWindow(control);UINT id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,point.x,point.y,0,control,nullptr);DestroyMenu(menu);PostMessageW(control,WM_NULL,0,0);if(id==70)openControl();else if(id==5){page=4;openControl();}else if(id)action(id);else{auto n=trayData();Shell_NotifyIconW(NIM_SETFOCUS,&n);}}
 BOOL CALLBACK findLANDELTAControl(HWND h,LPARAM arg){wchar_t name[64]{};GetClassNameW(h,name,64);if(!wcscmp(name,L"VortexACCWindow")&&GetWindowLongPtrW(h,GWLP_USERDATA)==0&&(GetWindowLongPtrW(h,GWL_STYLE)&WS_CAPTION)){*reinterpret_cast<HWND*>(arg)=h;return FALSE;}return TRUE;}
-void diagnostic(){std::wostringstream s;s<<L"LANDELTA 0.12.1 - Diagnóstico\r\n"<<L"Estado: "<<status<<L"\r\nConfiguración: "<<configStatus<<L"\r\nArchivo: "<<configPath.wstring()<<L"\r\nPuerto: "<<port<<L"\r\nJuego detectado: "<<gameRunning<<L"\r\nMemoria compartida: "<<sharedOK<<L"\r\nUDP registrado: "<<live.registered<<L"\r\nID jugador: "<<selectedID()<<L"\r\nPilotos recientes: "<<live.active(nowMs()).size()<<L"\r\nPaquetes rechazados: "<<live.badPackets<<L"\r\nCircuito: "<<wide(live.track)<<L"\r\n";
+void diagnostic(){std::wostringstream s;s<<L"LANDELTA 0.12.2 - Diagnóstico\r\n"<<L"Estado: "<<status<<L"\r\nConfiguración: "<<configStatus<<L"\r\nArchivo: "<<configPath.wstring()<<L"\r\nPuerto: "<<port<<L"\r\nJuego detectado: "<<gameRunning<<L"\r\nMemoria compartida: "<<sharedOK<<L"\r\nUDP registrado: "<<live.registered<<L"\r\nID jugador: "<<selectedID()<<L"\r\nPilotos recientes: "<<live.active(nowMs()).size()<<L"\r\nPaquetes rechazados: "<<live.badPackets<<L"\r\nCircuito: "<<wide(live.track)<<L"\r\n";
  s<<L"Proceso ACC: "<<gamePID<<L"\r\nEvento / sesión / tipo / fase UDP: "<<live.event<<L" / "<<live.session<<L" / "<<live.type<<L" / "<<live.phase<<L"\r\nSesión local: "<<playerTiming.g.sessionIndex<<L"\r\nReinicios de conexión: "<<networkReconnects<<L"\r\nCambios de sesión detectados: "<<sessionResets<<L"\r\nÚltimo reinicio: "<<lastReset<<L"\r\nÚltimo error UDP: "<<networkError<<L"\r\nPaquetes rechazados (total): "<<rejectedPackets<<L"\r\n";
  s<<L"Inicio con Windows / esta copia: "<<startupInfo.exists<<L" / "<<startupInfo.current<<L"\r\nInicio oculto: "<<backgroundLaunch<<L"\r\nBandeja: "<<trayPresent<<L"\r\nSesión visible: "<<sessionVisibility.active<<L"\r\nFrecuencia de sondeo (ms): "<<mainInterval<<L"\r\nAtajos: "<<hotkeyIssue<<L"\r\n";
  s<<L"Delta local: referencia ms / muestras: "<<lapDelta.best<<L" / "<<lapDelta.reference.size()<<L"; grabando: "<<lapDelta.recording<<L"\r\n";
@@ -421,7 +422,7 @@ void exportHistoryImage(){
  }catch(...){for(const auto& path:temporary){std::error_code error;fs::remove(path,error);}MessageBoxW(control,L"No se pudo completar la exportación. Comprueba el espacio y los permisos de la carpeta.",L"LANDELTA",MB_OK|MB_ICONERROR);}
 }
 
-void exportPreview(const fs::path& p){demoMode=true;generateDemo(25000);Bitmap bmp(1280,900,PixelFormat32bppARGB);Graphics g(&bmp);g.SetSmoothingMode(SmoothingModeAntiAlias);g.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);g.Clear(Color(0,0,0,0));text(g,L"LANDELTA / COMPACT",28,14,1100,44,26,FG,FontStyleBold);text(g,L"BETA 0.12.1 · DATOS SIMULADOS · PANELES INDEPENDIENTES",30,60,1100,25,14,MUTED);renderingOverlay=true;const int x[]={28,668,28,292,668,292,668},y[]={105,105,477,477,361,583,461};for(int i=0;i<PanelCount;i++){g.TranslateTransform(x[i],y[i]);renderPanel(g,i);g.ResetTransform();}renderingOverlay=false;UINT n=0,size=0;GetImageEncodersSize(&n,&size);std::vector<BYTE> buf(size);auto info=(ImageCodecInfo*)buf.data();GetImageEncoders(n,size,info);for(UINT i=0;i<n;i++)if(!wcscmp(info[i].MimeType,L"image/png")){bmp.Save(p.c_str(),&info[i].Clsid,nullptr);break;}}
+void exportPreview(const fs::path& p){demoMode=true;generateDemo(25000);Bitmap bmp(1280,900,PixelFormat32bppARGB);Graphics g(&bmp);g.SetSmoothingMode(SmoothingModeAntiAlias);g.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);g.Clear(Color(0,0,0,0));text(g,L"LANDELTA / COMPACT",28,14,1100,44,26,FG,FontStyleBold);text(g,L"BETA 0.12.2 · DATOS SIMULADOS · PANELES INDEPENDIENTES",30,60,1100,25,14,MUTED);renderingOverlay=true;const int x[]={28,668,28,292,668,292,668},y[]={105,105,477,477,361,583,461};for(int i=0;i<PanelCount;i++){g.TranslateTransform(x[i],y[i]);renderPanel(g,i);g.ResetTransform();}renderingOverlay=false;UINT n=0,size=0;GetImageEncodersSize(&n,&size);std::vector<BYTE> buf(size);auto info=(ImageCodecInfo*)buf.data();GetImageEncoders(n,size,info);for(UINT i=0;i<n;i++)if(!wcscmp(info[i].MimeType,L"image/png")){bmp.Save(p.c_str(),&info[i].Clsid,nullptr);break;}}
 
 int WINAPI wWinMain(HINSTANCE inst,HINSTANCE,LPWSTR args,int show){backgroundLaunch=std::wstring(args).find(L"--background")!=std::wstring::npos;SetProcessDPIAware();CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);GdiplusStartupInput input;if(GdiplusStartup(&gdip,&input,nullptr)!=Ok)return 1;
  if(std::wstring(args).find(L"--preview")!=std::wstring::npos){exportPreview(fs::current_path()/L"LANDELTA-demo.png");GdiplusShutdown(gdip);CoUninitialize();return 0;}
@@ -435,7 +436,7 @@ int WINAPI wWinMain(HINSTANCE inst,HINSTANCE,LPWSTR args,int show){backgroundLau
  int clientWidth=std::clamp(cfg.controlWidth,acc::ControlLayout::minWidth,std::max<int>(acc::ControlLayout::minWidth,availableWidth-(frame.right-frame.left)));
  int clientHeight=std::clamp(cfg.controlHeight,acc::ControlLayout::minHeight,std::max<int>(acc::ControlLayout::minHeight,availableHeight-(frame.bottom-frame.top)));
  RECT rect{0,0,clientWidth,clientHeight};AdjustWindowRectEx(&rect,controlStyle,FALSE,WS_EX_TOPMOST);
- control=CreateWindowExW(WS_EX_TOPMOST,wc.lpszClassName,L"LANDELTA ACC Overlay · Beta 0.12.1",controlStyle,work.left+std::max<int>(0,(availableWidth-(rect.right-rect.left))/2),work.top+std::max<int>(0,(availableHeight-(rect.bottom-rect.top))/2),rect.right-rect.left,rect.bottom-rect.top,nullptr,nullptr,inst,nullptr);
+ control=CreateWindowExW(WS_EX_TOPMOST,wc.lpszClassName,L"LANDELTA ACC Overlay · Beta 0.12.2",controlStyle,work.left+std::max<int>(0,(availableWidth-(rect.right-rect.left))/2),work.top+std::max<int>(0,(availableHeight-(rect.bottom-rect.top))/2),rect.right-rect.left,rect.bottom-rect.top,nullptr,nullptr,inst,nullptr);
  for(int i=0;i<PanelCount;i++){panels[i]=CreateWindowExW(WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE,wc.lpszClassName,L"LANDELTA",WS_POPUP,cfg.x[i],cfg.y[i],panelW(i),panelH(i),nullptr,nullptr,inst,(void*)(INT_PTR)(i+1));}
  updateWindows();installTray();if(!backgroundLaunch||!trayPresent)ShowWindow(control,cfg.controlMaximized?SW_SHOWMAXIMIZED:show);
  bool keys=RegisterHotKey(control,1,MOD_CONTROL|MOD_ALT|MOD_NOREPEAT,VK_F10);keys=RegisterHotKey(control,2,MOD_CONTROL|MOD_ALT|MOD_NOREPEAT,VK_F11)&&keys;keys=RegisterHotKey(control,3,MOD_CONTROL|MOD_ALT|MOD_NOREPEAT,VK_F12)&&keys;if(!keys)hotkeyIssue=L"Hay atajos ocupados; abre LANDELTA desde el icono junto al reloj.";adjustPolling();MSG msg;while(GetMessageW(&msg,nullptr,0,0)>0){TranslateMessage(&msg);DispatchMessageW(&msg);}for(int i=1;i<=3;i++)UnregisterHotKey(control,i);WSACleanup();ReleaseMutex(mutex);CloseHandle(mutex);GdiplusShutdown(gdip);CoUninitialize();return 0;
