@@ -8,8 +8,9 @@ con distintas versiones de MinGW pueden producir binarios diferentes.
 VALIDADO EN ESTA VERSIÓN
 • Compilación MinGW-w64 C++17 con -O2 -Wall -Wextra: sin advertencias.
 • Recurso Windows: icono LANDELTA, manifest y versión 0.11.
-• Solo DLL de Windows: GDI32, gdiplus, KERNEL32, msvcrt, ole32,
-  SHELL32, USER32 y WS2_32. Runtime del compilador enlazado estáticamente.
+• Runtime del compilador enlazado estáticamente; dependencias del sistema
+  Windows para interfaz, gráficos, sockets y COM. La lista concreta cambia
+  según la variante de MinGW utilizada.
 • test_driving.cpp (ASAN/UBSAN): entradas, congelación, delta nativo/signo,
   delta disponible sin estimatedMs, pausa/boxes/sin referencia y sectores.
 • test_lap_delta.cpp (ASAN/UBSAN): traza no lineal, ganancias/pérdidas,

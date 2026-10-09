@@ -17,7 +17,7 @@ permissions:
 jobs:
   portable-tests:
     name: Portable tests (Linux, simulated APIs)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -45,7 +45,7 @@ jobs:
       - name: Package app
         shell: pwsh
         run: python tools/package-release.py --binary LANDELTA.exe --output dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: LANDELTA-Windows-build
           path: dist/
@@ -59,7 +59,7 @@ jobs:
       github.repository == 'Landsxd/landelta' && github.ref == 'refs/heads/main' &&
       ((github.event_name == 'workflow_dispatch' && inputs.publish_beta) ||
        (github.event_name == 'push' && contains(github.event.head_commit.message, '[release v0.11.0]')))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: landelta-release-v0.11.0

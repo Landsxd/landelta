@@ -12,7 +12,7 @@ Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands
 
 ## Descargar y empezar
 
-En este repositorio, abre **Releases** y descarga **LANDELTA-Windows-Beta.zip** de la versión **v0.11.0** cuando esté publicada. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
+Abre la [beta v0.11.0](https://github.com/Landsxd/landelta/releases/tag/v0.11.0) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
 
 1. Extrae el ZIP en una carpeta fija y abre `LANDELTA.exe`.
 2. La primera vez, mantén ACC cerrado para preparar su conexión local. Si no encuentra Documentos, usa **Conexión → Elegir carpeta de ACC**.
@@ -80,7 +80,7 @@ El resultado es `LANDELTA.exe` en la raíz del proyecto. El ejecutable distribui
 - [Qué se ha validado y sus límites](VALIDACION.txt)
 - [Cómo publicar la beta](docs/PUBLISHING.md)
 
-El flujo de GitHub Actions incluye pruebas de lógica e integración simulada en Linux y compilación en Windows. Su primera ejecución debe revisarse una vez subido el repositorio. Compilar correctamente no certifica por sí solo una carrera real.
+El flujo de GitHub Actions incluye pruebas de lógica e integración simulada en Linux y compilación en Windows. La [primera publicación de la beta](https://github.com/Landsxd/landelta/actions/runs/37895981404) superó ambos trabajos y la verificación de sus descargas. Compilar correctamente no certifica por sí solo una carrera real.
 
 ## Créditos
 
