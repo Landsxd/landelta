@@ -1,0 +1,36 @@
+VORTEX ACC OVERLAY — BETA 0.8 — LECTURA RÁPIDA EN CARRERA
+
+VISIBILIDAD
+• Nombres de 18 a 24 px. Gaps de relativos de 18 a 28 px, en negrita.
+• Filas más altas y paneles más anchos para evitar amontonar los datos.
+• Blanco puro, verde neón Vortex, azul cian intenso, amarillo vivo, rojo y violeta.
+• Texto secundario más claro. Fondos conservan su transparencia ajustable.
+• Indicadores de automovilismo dibujados como vectores: bandera a cuadros en
+  encabezados, banderas de color para doblados y placas de estado con bordes.
+• DOBLADO (cian): le llevas vuelta. TE DOBLA (amarillo): te lleva vuelta.
+  Palabras completas, icono y color; ya no depende de abreviaturas pequeñas.
+• PEN: sanción confirmada propia. AVISO: mensaje reciente, no confirma sanción
+  pendiente. BOX: boxes. Etiquetas y leyendas aumentadas.
+• Ritmo: títulos de 18 px, pilotos de 22 px, tasas de 25 px y explicación de 20 px.
+• Vueltas/sectores conserva únicamente esos datos. Etiquetas a 18 px y tiempos
+  de 29–35 px. No se añade historial al overlay de tiempos.
+
+RELATIVOS CON DATOS INTERMITENTES
+• Las dos filas delanteras y traseras siempre tienen contenido: un piloto o
+  un aviso explícito de que no hay datos de un auto en esa dirección.
+• Entre 4 y 8 segundos sin actualización, puede conservar el último piloto
+  como SIN SEÑAL y sin mostrar un gap viejo. Los datos frescos tienen prioridad.
+• A los ocho segundos deja de mostrar el piloto vencido. No estima movimientos
+  ni inventa competidores para rellenar filas.
+• Delante/detrás sigue definido por cercanía física en media vuelta de pista,
+  no por posición de carrera. Puede no haber un coche cercano a un lado.
+• Se probaron cruces de meta, cortes independientes delante/detrás, recuperación,
+  boxes, pausa, doblados y cambio de sesión. Esto mejora los estados vacíos;
+  no confirma la causa exacta del incidente observado sin captura/registro.
+
+ACTUALIZACIÓN
+Cierra Vortex anterior y abre la Beta 0.8. No necesitas reparar la conexión
+que ya funciona. Historial, conexión y opacidad conservados.
+Solo se redistribuyen posiciones que coinciden con los antiguos valores por
+omisión. Las posiciones personalizadas permanecen. Los paneles son más grandes;
+puedes arrastrarlos o usar Paneles > Restablecer posiciones si se superponen.

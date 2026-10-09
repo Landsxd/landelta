@@ -1,0 +1,40 @@
+VORTEX ACC OVERLAY — BETA 0.6 — RECUPERACIÓN DE PILOTOS
+
+CORRECCIONES
+• Antes, recibir actualizaciones de la sesión bastaba para mantener abierta la
+  conexión aunque no llegara ningún auto. Podía quedarse sin parrilla indefinidamente.
+• Ahora controla por separado los paquetes de autos. Si pasan ocho segundos
+  sin recibirlos dentro de una sesión activa, vuelve a registrarse y solicita
+  pilotos y circuito. No dispara esta recuperación durante una pausa conocida.
+• Una lista con nombres pero sin actualizaciones de posición también provoca
+  solicitudes de recuperación; ya no se considera una parrilla operativa.
+• El estado ya no dice conectado con cero pilotos. Memoria local y pilotos UDP
+  se muestran por separado en Conexión. Los errores UDP no se ocultan detrás
+  del mensaje de memoria local conectada.
+• Nuevo botón Conexión > Reparar conexión de pilotos. Con ACC cerrado respalda
+  broadcasting.json, repara JSON/puerto/campos inválidos y conserva claves,
+  puerto y contraseñas válidas existentes. Después debes abrir ACC nuevamente.
+  Si el juego sigue abierto, indica que hay que cerrarlo; no modifica su archivo.
+• Diagnóstico distingue registro, sesión, autos, metadatos, paquetes rechazados
+  y recuperaciones. No incluye contraseñas ni contenido crudo de paquetes.
+• Corrección adicional del lector de replay: el protocolo v4 contiene dos
+  floats de tiempo de replay, sin el int extra que leía la versión anterior.
+  Esto no se presenta como explicación de una carrera normal sin pilotos.
+
+PARA PROBAR ESTA ACTUALIZACIÓN
+1. Cierra ACC y la versión anterior de Vortex.
+2. Abre VortexACC.exe de esta versión.
+3. Conexión > Reparar conexión de pilotos.
+4. Abre ACC y entra en la carrera. Comprueba Pilotos UDP en Conexión.
+5. Si siguen sin aparecer, pulsa Diagnóstico y comparte diagnostico.txt para
+   distinguir falta de respuesta, rechazo de registro y error de lectura.
+
+Se conservaron ajustes, historial, transparencias y análisis de ritmo.
+Pruebas automatizadas verifican sesión que sigue llegando sin autos, nueva
+suscripción, recuperación de la parrilla, pausa y errores de paquete.
+La compilación Windows se ha verificado, pero no se ejecutó ACC real en este
+entorno. Sin el diagnóstico de tu PC no se conoce aún la causa exacta de tu caso.
+
+Contraste del protocolo:
+https://github.com/framf0rt/ACCBroadcastingTool-Modified/blob/master/ksBroadcastingNetwork/BroadcastingNetworkProtocol.cs
+https://github.com/angel-git/acc-broadcasting/blob/master/ACCUdpRemoteClient.cs

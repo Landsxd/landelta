@@ -1,0 +1,35 @@
+VORTEX ACC — BETA 0.9 — COMPACT + PEDALES + DELTA
+
+DISEÑO
+• CLASI: 600 px de ancho, filas de 40 px, nombres de 24 px. Ocho filas por
+  defecto en vez de doce; sigue tu posición hasta desplazarte con la rueda.
+• REL: 520 × 226 px. Mantiene 2 coches delante, tu auto y 2 detrás.
+• Retirados títulos grandes, subtítulos, leyendas y columna de vueltas de clasi.
+  Las explicaciones están en Ayuda. Banderas ±nV; PEN, ! y BOX siguen visibles.
+• Vueltas y sectores: columna de 240 × 188 px. Tiempos en minutos y milésimas.
+• Fondos siguen siendo transparentes/ajustables; barras, texto e iconos opacos.
+• Ritmo y alcance separados en un panel opcional, apagado inicialmente.
+
+NUEVOS PANELES
+• Pedales: barras GAS/FRENO y porcentaje real de entrada de ACC. Lectura directa
+  de acpmf_physics, sin calibraciones nuevas. No equivale a presión física en kg.
+• Delta: barra divergente de ±1 s y cifra con tres decimales sin recorte. Fuente:
+  delta de ACC, no diferencia entre coches. Verde negativo / rojo positivo.
+  Espera referencia válida y descarta señal caducada, pausa, replay y boxes.
+• SECT: tiempos de sectores de las 2 últimas vueltas, con diferencia frente a
+  la mejor vuelta limpia anterior a cada una. Un récord conserva su ganancia;
+  las vueltas inválidas/parciales/boxes muestran × y no generan deltas.
+• Cada panel se puede mover, bloquear, activar y ocultar por separado.
+
+CONEXIÓN Y AJUSTES
+• Se conservan configuración de pilotos, historial, opacidad y posiciones
+  personalizadas. Las posiciones antiguas por defecto se adaptan al diseño.
+• Nueva memoria de pedales independiente; recuperación de paquetes congelados.
+• Siete paneles guardados; carga compatible con ajustes de versiones anteriores.
+• No necesitas Reparar si la conexión ya funciona. Cierra el Vortex anterior
+  antes de abrir este EXE; usa Restablecer posiciones para distribuir paneles.
+
+VALIDACIÓN
+Compilación Windows x64, pruebas con sanitizadores e integración de la conexión
+con APIs simuladas. Vista previa exportada desde las funciones del programa.
+Falta validar esta versión ejecutándose en Windows con ACC y tus pedales.

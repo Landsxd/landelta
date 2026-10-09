@@ -1,0 +1,22 @@
+VORTEX ACC OVERLAY — BETA 0.2
+
+• Áreas vacías 100% transparentes, sin el rectángulo general del overlay.
+• Fondo de las zonas con información al 25% por defecto; ajustable a 0%.
+• Letras y números conservan opacidad completa y sombra de contraste.
+• Vueltas y sectores: barra de 84 px, antes 363 px (al tamaño 100%).
+• Solo vuelta actual, número de vuelta y S1/S2/S3. Sin delta, última, mejor,
+  historial ni cabecera grande en ese panel.
+• El historial queda pendiente para un extra o resumen de fin de carrera.
+• Se conservan las posiciones, tamaño y visibilidad de la versión anterior.
+
+ACTUALIZACIÓN
+Cierra VortexACC anterior antes de abrir el nuevo EXE o sustituirlo.
+No necesitas borrar ajustes ni volver a activar la conexión de ACC.
+En Paneles, Fondo controla solo el fondo, no las letras. Empieza en 25%.
+Con 0% puedes mover los paneles haciendo clic sobre letras o números visibles.
+
+VALIDACIÓN
+Compilación Windows x64: correcta.
+Pruebas del lector de telemetría y validación del diseño: correctas.
+El diseño exportado verifica alfa 0 en espacios vacíos y alfa 64 en fondos.
+La composición de ventanas con transparencia debe probarse en Windows real.

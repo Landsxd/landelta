@@ -1,0 +1,21 @@
+VORTEX ACC · BETA 0.3
+
+• Clasificación y relativos: nombres de 13 a 18 px en negrita, filas más altas,
+  columnas separadas y encabezados mayores. Conserva colores y transparencia.
+• Clasificación: P roja para la penalización confirmada del jugador. ! ámbar
+  para una comunicación reciente de penalización de cualquier coche (60 s).
+  No convierte mensajes libres de ACC en sanciones activas inventadas.
+• Relativos: solo cercanía física, sin posición de carrera. Flechas de delante
+  y detrás, jugador al centro. DOB azul para doblados; +V ámbar si te doblan.
+  Protege el cruce de meta de cambios de color falsos.
+• Sectores con minutos y milésimas: 94340 ms -> 1:34.340. Mantiene la barra
+  de vuelta y S1/S2/S3, sin historial ni vueltas recientes.
+• Demo con coches de diferentes vueltas y ambos iconos para revisar el diseño.
+• Se conservan tus posiciones, tamaño y Fondo. Si los paneles se solapan por
+  el nuevo ancho, puedes arrastrarlos o usar Restablecer posiciones.
+
+Actualización: cierra el Vortex anterior y abre VortexACC.exe de esta versión.
+No necesitas borrar tus ajustes ni cambiar broadcasting.json otra vez.
+
+Ver VALIDACION.txt para las pruebas realizadas y LEEME.txt para los límites
+de la información de penalizaciones y de los tiempos relativos estimados.

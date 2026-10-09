@@ -1,0 +1,41 @@
+VORTEX ACC · BETA 0.4 · CONEXIÓN Y TIEMPOS
+
+CONEXIÓN
+• Reconexión automática con esperas progresivas de 1 a 10 segundos.
+• Distingue ausencia de datos de un error real de socket; vuelve a registrar
+  una conexión nueva si ACC no responde o deja de enviar la sesión.
+• Procesa la cola recibida antes de decidir que la conexión expiró.
+• Busca de nuevo pilotos y circuito mientras faltan nombres o metadatos.
+• Detecta cambios del proceso de ACC, del puerto y de la contraseña configurada.
+• Suelta los mapas de memoria congelados y espera un paquete diferente para
+  evitar volver a mostrar una captura antigua como si fuese telemetría nueva.
+
+REINICIOS
+• Limpia pilotos, splits, avisos y muestras al pasar entre modalidades/sesiones,
+  cambiar de pista, reiniciar carrera o salir al menú.
+• Si se reutiliza el ID de sesión, detecta cambios de fase y reinicio del reloj.
+  Un solo paquete de sesión retrasado no borra la carrera.
+• Separa nueva carrera, nueva vuelta y regreso a boxes. No combina sectores de
+  dos vueltas. Acepta una lectura coherente y reciente de memoria compartida.
+• Pausa: conserva el estado sin avanzar el cronómetro ni declarar una caída.
+• Replay: usa el coche enfocado; limpia datos al entrar, salir o retroceder.
+
+PRECISIÓN
+• Gaps y relativos basados en pasos observados por el mismo punto, interpolados
+  entre muestras. Cuando falta historial, mantiene la estimación por vuelta (~).
+  Siguen siendo estimaciones de telemetría, no gaps oficiales garantizados.
+• Selección de vecinos por distancia física, independiente del tiempo calculado
+  y de la posición oficial. Incluye coches aún sin vuelta o posición asignada.
+• Prioriza los sectores UDP de la vuelta correcta; captura actualizaciones de
+  sector que llegan después del cambio de índice de sector en memoria.
+• Tras cruzar meta muestra sectores ANT. durante cinco segundos y los limpia.
+• Corrige las iniciales con acentos y caracteres UTF-8.
+• Diagnóstico ampliado con sesión, fase, proceso, errores y reinicios detectados.
+
+ACTUALIZAR
+Cierra la versión anterior y abre este VortexACC.exe. Conserva tus ajustes.
+Para datos reales, pulsa Usar datos de ACC si estabas probando el modo demo.
+
+Se compilaron el EXE Windows x64 y las pruebas. Se verificaron 216000 paquetes
+de coches, 60 participantes y transiciones de sesión simuladas; también los
+bucles reales de conexión con APIs simuladas. Prueba real con ACC: pendiente.

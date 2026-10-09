@@ -1,0 +1,26 @@
+VORTEX ACC OVERLAY — BETA 0.7 — LECTURA DE CONFIGURACIÓN
+
+La captura aportada muestra un error JSON en columna 2 al iniciar ACC.
+Se reprodujo ese error con JSON UTF-16 sin BOM: la Beta 0.6 solo reconocía
+UTF-16 LE si comenzaba por FF FE y pasaba el resto como UTF-8 sin convertir.
+La codificación concreta del archivo del usuario no se ha inspeccionado.
+
+• Lee UTF-8 y UTF-16 LE/BE, con o sin BOM, incluyendo espacios iniciales.
+• Convierte Unicode correctamente: preserva contraseñas con acentos y pares
+  sustitutos; no elimina ceros intercalados como arreglo improvisado.
+• Admite terminadores NUL al final; rechaza unidades truncadas y pares inválidos.
+• Si ACC está abierto y un archivo previamente válido de la misma ruta queda
+  incompleto/inaccesible durante una escritura, conserva puerto y contraseña
+  anteriores en memoria y vuelve a leer en cinco segundos. No corta UDP.
+• Un archivo inválido sin configuración válida anterior sigue sin habilitarse.
+  No utiliza las credenciales de otra carpeta al cambiar la ruta.
+• Diagnóstico informa el byte del error JSON sin copiar secretos del archivo.
+• Conserva la escritura UTF-16 LE con BOM usada al reparar; no requiere una
+  nueva reparación para leer un archivo válido en las codificaciones admitidas.
+
+PRUEBA
+Cierra Vortex anterior y abre este EXE. Puedes mantener ACC abierto dentro de
+la carrera: la nueva versión intentará leer el archivo existente y conectarse.
+Primero prueba sin pulsar Reparar. Si sigue fallando, usa Diagnóstico en pista.
+La corrección se verificó con archivos de prueba y simulación; no se ha probado
+la conexión real del equipo del usuario desde este entorno.

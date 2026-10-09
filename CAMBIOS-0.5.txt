@@ -1,0 +1,55 @@
+VORTEX ACC OVERLAY — BETA 0.5
+
+RITMO CONTRA RIVALES Y ALCANCE
+• Dos comparaciones nuevas al pie de Relativos: rival delante y rival detrás.
+• Se elige el coche próximo en esa dirección, de tu vuelta y en el orden de
+  carrera correspondiente. Los doblados continúan en las filas de Relativos,
+  pero no se usan como objetivo para ganar o defender una posición.
+• Ritmo: mediana de entre tres y cinco vueltas limpias entre las últimas cinco
+  vueltas completadas observadas. No usa la mejor vuelta como ritmo reciente.
+• Se descartan vueltas inválidas, entrada/salida de boxes, vueltas con paso por
+  boxes, cambios de piloto y vueltas que no se observaron completas.
+• Primera vuelta tras conectar: se guarda su tiempo oficial si llega, pero es
+  PARCIAL para el análisis, porque no se observó completa. No suma al ritmo.
+• Recortas / se aleja / te recorta / te alejas, en segundos por vuelta.
+• Alcance aproximado: diferencia de tiempo / ventaja de ritmo. Se muestra ~.
+• Un ritmo dentro de 0.10 s/v se considera similar y no genera una fecha falsa.
+• Cuando ACC informa tiempo restante, indica si el alcance calculado ocurriría
+  después del final. No aplica este límite si falta ese dato.
+• En pausa la estimación se detiene. Se mantiene el ritmo al reanudar.
+• Pits, pérdida de datos o cambio de piloto exigen nuevas vueltas observadas.
+• Disponible durante la fase activa de carrera, sin análisis de replays.
+• La predicción supone que ambos mantienen el ritmo. No predice adelantamientos,
+  tráfico, accidentes, cambios de clima, sanciones ni futuras paradas.
+
+HISTORIAL POR CIRCUITO
+• Nueva pestaña Historial: circuito > sesión > vueltas y sectores.
+• Circuito identificado por el ID y nombre que envía ACC; sin lista fija de pistas.
+• Fecha local, modalidad, dorsal, piloto, mejor válida, S1/S2/S3 y estado por vuelta.
+• Sesiones ordenadas por fecha; vueltas más recientes primero. Flechas y rueda
+  para recorrer páginas. «Volver» sube de vuelta a sesión y de sesión a circuito.
+• Guarda solo el auto identificado por memoria local. Enfocar otro coche por
+  UDP, sin datos propios, no lo incorpora al historial personal.
+• Archivos por sesión en %LOCALAPPDATA%\VortexACC\history. Se actualizan después
+  de cada vuelta (en hasta dos segundos) y al cerrar normalmente el programa.
+• Escritura en temporal y reemplazo atómico; nunca borra el archivo anterior
+  antes de terminar el nuevo. Los errores aparecen en la pestaña y se reintentan.
+• Un archivo ilegible se conserva y se omite al cargar; no bloquea los demás.
+• Una reconexión de red conserva la sesión y evita duplicados. Un nuevo circuito,
+  sesión, carrera reiniciada, menú o proceso de ACC crea una sesión independiente.
+• Si cierras y abres Vortex a mitad de una carrera, crea otro registro para el
+  tramo nuevo observado. No reconstruye vueltas que ocurrieron con Vortex cerrado.
+• Conserva el historial al actualizar el EXE; no lo incorpora al ZIP ni lo sube.
+• El historial comienza con esta versión. Las carreras anteriores no se importan.
+• Demo separada: incluye Monza y Spa ficticios para probar toda la navegación;
+  nunca escribe sus números en los archivos del historial real.
+
+DISEÑO
+Se conservan colores, letras grandes y fondos al 25%. El panel Relativos crece
+para las dos comparaciones; Vueltas y sectores sigue siendo una barra compacta.
+Los ajustes y posiciones existentes se conservan. Si los paneles quedan juntos,
+arrástralos o usa Paneles > Restablecer posiciones.
+
+ACTUALIZAR
+Cierra Vortex anterior, extrae el ZIP y abre VortexACC.exe. No borres la carpeta
+%LOCALAPPDATA%\VortexACC. Puedes conservar copias de history para respaldo.

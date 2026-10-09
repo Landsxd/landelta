@@ -1,0 +1,50 @@
+LANDELTA ACC OVERLAY · BETA 0.11 · VALIDACIÓN
+===========================================
+Ejecutable: LANDELTA.exe (Windows x64, aplicación GUI)
+Las descargas de GitHub Releases se compilan en un runner Windows.
+Comprueba su hash con SHA256SUMS.txt de la misma release: las compilaciones
+con distintas versiones de MinGW pueden producir binarios diferentes.
+
+VALIDADO EN ESTA VERSIÓN
+• Compilación MinGW-w64 C++17 con -O2 -Wall -Wextra: sin advertencias.
+• Recurso Windows: icono LANDELTA, manifest y versión 0.11.
+• Solo DLL de Windows: GDI32, gdiplus, KERNEL32, msvcrt, ole32,
+  SHELL32, USER32 y WS2_32. Runtime del compilador enlazado estáticamente.
+• test_driving.cpp (ASAN/UBSAN): entradas, congelación, delta nativo/signo,
+  delta disponible sin estimatedMs, pausa/boxes/sin referencia y sectores.
+• test_lap_delta.cpp (ASAN/UBSAN): traza no lineal, ganancias/pérdidas,
+  campos nativos ausentes, mejor limpia, pausa, boxes, inválidas/parciales,
+  cruce de meta, cortes, retroceso, cambio de auto y reinicio de sesión.
+• test_background.cpp (ASAN/UBSAN): espera, menú, sesiones, cortes,
+  pausa/reinicio, cierre, ocultar/panel OFF, demo y frecuencia en reposo.
+• test_background_loop.py: funciones reales de visibilidad/timers con Win32
+  simulado; auto mostrar, OFF, práctica > carrera, reinicio dentro de V1,
+  reinicio por vueltas, tiempo y señal UDP con el mismo ID, sesión sin coches recibidos, F11,
+  pausa, menú, sin activar ventanas ni mostrar el control sobre la carrera.
+• test_settings.py: migración de 3 a 7 paneles, posiciones personalizadas,
+  tamaño/opacidad/visibilidad, autoShow por defecto y persistencia del OFF.
+• test_connection_loop.py: conexión UDP/memoria real con transporte simulado,
+  reinicio UDP que limpia el delta local, parrilla detenida, recuperación, pausa, menús, mapeos congelados, nueva
+  sesión, autenticación, enrutamiento de analytics y aislamiento de demo.
+• test_startup.py: escritor real de accesos con COM simulado, rutas con
+  espacios, --background, activar/actualizar/desactivar, fallos de COM,
+  guardado y reemplazo que conservan el acceso anterior.
+• test_telemetry.cpp (ASAN/UBSAN): protocolo, nombre de cliente LANDELTA,
+  layout, sesiones, vueltas, replay y recorrido simulado de 60 coches.
+• Vista SVG/PNG exportada desde funciones de dibujo originales; verificación
+  de transparencia, fuentes, orden/colores, sectores, ausencia de porcentajes
+  en pedales, delta, nueva marca y opción Inicio. Inspección visual completada.
+• ZIP comprobado por CRC y coincidencia del EXE empaquetado.
+
+LÍMITES DE LA COMPROBACIÓN
+Las pruebas de lógica se ejecutan en Linux y la distribución de Releases
+se compila en Windows con GitHub Actions. No se ha iniciado la GUI ni
+probado ACC real en esos entornos. Las pruebas de ventanas, sockets y COM
+son simulaciones.
+No certifican inicio de sesión real de Windows, Explorer/bandeja ni foco
+con el juego. Probar ACC en ventana sin bordes; el modo exclusivo puede
+cubrir las ventanas del overlay.
+La traza de delta interpola entre muestras a 100 ms solicitados. Milésimas
+mostradas son resolución de presentación, no garantía de exactitud de 1 ms.
+Se necesita una vuelta limpia completa observada desde el inicio. El
+historial guardado no se utiliza como referencia de delta en otra sesión.

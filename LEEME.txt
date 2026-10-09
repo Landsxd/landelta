@@ -1,0 +1,247 @@
+LANDELTA ACC OVERLAY · BETA 0.11 · WINDOWS 10 / 11 x64
+=================================================
+
+ACTUALIZAR DESDE VORTEX
+1. Sal de Vortex desde su icono junto al reloj > Salir de Vortex.
+2. Extrae este ZIP y deja LANDELTA.exe en una carpeta fija. Abre LANDELTA.exe.
+3. Tus posiciones, ajustes e historial se conservan en la carpeta anterior.
+4. Si usabas inicio con Windows: Inicio > Activar actualiza el acceso al nuevo EXE.
+   El acceso anterior se migra a LANDELTA-Auto.lnk cuando se activa con éxito.
+5. Inicio > Mostrar overlays al entrar en sesión viene en ON por defecto.
+   Los paneles desactivados permanecen apagados. F11 oculta la sesión actual;
+   una nueva sesión vuelve a mostrar los activados. OFF conserva el ocultado.
+
+INICIO AUTOMÁTICO Y SEGUNDO PLANO
+• Guarda el EXE en una carpeta fija. Abre Inicio > Iniciar con Windows > Activar.
+• Pulsa Dejar en segundo plano; en el próximo inicio de sesión se abrirá oculto.
+• Al entrar en una sesión de ACC aparecen los paneles; al salir, se ocultan.
+  Detecta también práctica > clasificación > carrera sin pasar por el menú.
+  La señal UDP de sesión no tiene que esperar a recibir la lista de pilotos.
+  Se bloquean al detectar una sesión nueva para no interceptar clics del juego.
+• X/minimizar dejan LANDELTA en la bandeja. Para cerrarlo: icono junto al reloj >
+  Salir de LANDELTA, o Inicio > Salir de LANDELTA. Abre el icono para volver al control.
+• Sin ACC, usa Probar modo demo para acomodar paneles; no se muestran en escritorio
+  con datos reales ausentes. Enviar a segundo plano desactiva el modo demo.
+• Para cancelar el arranque automático: Inicio > Desactivar. No requiere admin.
+• Si mueves el EXE, sal de la copia anterior, abre la nueva y vuelve a activar.
+• Detalles, ubicación del acceso y pruebas: CAMBIOS-0.10.txt.
+
+PRIMER ARRANQUE
+1. Extrae todo este ZIP. Cierra ACC la primera vez.
+2. Abre LANDELTA.exe. No requiere Python, .NET, instalador ni cuenta.
+3. LANDELTA busca Documentos\Assetto Corsa Competizione\Config.
+   Si encuentra la carpeta, activa la conexión de ACC automáticamente.
+   Si no la encuentra, entra a Conexión > Elegir carpeta de ACC.
+   Elige Assetto Corsa Competizione dentro de Documentos, que contiene Config.
+4. Abre ACC, usa ventana sin bordes (o ventana) y entra en pista.
+   La pantalla principal de ACC puede no enviar datos. Espera unos segundos.
+5. Arrastra cada overlay desde una zona con información. Ajusta tamaño y Fondo.
+6. Pulsa Bloquear para conducir: el control pasa a la bandeja y los clics pasan al juego.
+
+QUÉ INCLUYE
+• Clasificación: posiciones oficiales, pilotos, mejor vuelta.
+  Nombres de 24 px en negrita y filas de 40 px a escala 100%. Encabezado CLASI.
+  Ocho filas iniciales centradas en tu posición; ajustable de 4 a 30. Al usar
+  la rueda recorres manualmente la tabla; Restablecer posiciones vuelve a seguirte.
+  PEN roja: sanción confirmada de tu auto por memoria compartida.
+  ! ámbar: aviso de penalización recibido por UDP en los últimos 60 segundos;
+  puede ser una advertencia o un cambio de sanción, no confirma que siga activa.
+  Para otros pilotos ACC no expone aquí una lista de sanciones pendientes:
+  solo se muestran avisos recibidos desde la conexión. Sin icono no garantiza
+  ausencia de sanción. Los mensajes quedan disponibles en Diagnóstico.
+  En práctica/clasificación, GAP compara mejores vueltas. En carrera, GAP ~
+  usa pasos observados por la misma zona de pista cuando están disponibles.
+  Sin esos pasos usa una estimación por vuelta de referencia, marcada con ~.
+  Los coches sin posición asignada aparecen con — al final de la lista.
+  Puedes ver más filas o usar la rueda del mouse con los paneles desbloqueados.
+• Relativos: dos autos próximos delante y dos detrás, por cercanía física en
+  la pista. Incluye coches doblados, diferenciados con color. Excluye pits.
+  No muestra posiciones de carrera. Flecha arriba = delante; abajo = detrás.
+  Bandera cian / −nV = doblado; bandera amarilla / +nV = coche que te dobla.
+  n indica la diferencia de vueltas según el avance total relativo. La diferencia de vueltas se colorea solo en carrera.
+  Al cruzar la meta se compara avance total para evitar falsos doblados.
+  Los coches se ordenan por distancia en pista incluso si aún no hay tiempos.
+  En ese caso se muestra —. Al estar en boxes, el panel espera la salida a pista.
+• Tiempos: únicamente vuelta actual y S1, S2, S3 en una columna compacta (de arriba hacia abajo).
+  Sectores en minutos:segundos.milésimas: 0:35.400, 1:00.000, 1:34.340.
+  Sin delta, última, mejor ni vueltas recientes en este overlay. El historial
+  se revisa en su propia pestaña de la ventana de control.
+  El color de los sectores compara con tu mejor vuelta, cuando llega ese dato.
+  Al cruzar la meta se muestran durante cinco segundos los sectores anteriores,
+  marcados con *. Después se muestran solo los sectores completados de la vuelta
+  actual. -- significa sin dato. Si se perdió un sector no se inventa su valor.
+  El cronómetro propio procede de memoria local; los splits UDP de la misma
+  vuelta tienen prioridad sobre la caché local. No mezcla vueltas de ambas fuentes.
+• Ritmo y alcance en un panel independiente, opcional: rival de tu vuelta delante y detrás.
+  Compara la mediana de 3–5 vueltas limpias observadas recientes. Indica cuánto
+  recortas o pierdes por vuelta y un alcance estimado (~), o si ocurriría después
+  del final cuando hay tiempo restante de carrera disponible.
+  Necesita al menos tres vueltas limpias completas de ambos desde la conexión.
+  Descarta inválidas, vueltas de boxes, tramos sin datos y cambios de piloto.
+  Las predicciones se detienen en pausa y se muestran solo en carrera activa.
+  No predicen cambios futuros de ritmo, tráfico, paradas ni adelantamientos.
+• Pedales: GAS y FRENO con barras, sin porcentajes. Lee el prefijo de
+  acpmf_physics en modo lectura; son entradas del juego, no fuerza en kg.
+  Muestreo solicitado cada 33 ms (la frecuencia real depende de Windows).
+  Datos congelados durante un segundo se invalidan y se vuelve a abrir la memoria.
+  Pausa/replay/menú: —.
+• Delta independiente: verde y negativo = ganas; rojo y positivo = pierdes.
+  Δ MEJOR compara tu tiempo actual con el tiempo observado en el mismo punto
+  de tu mejor vuelta limpia completa de esta sesión. Interpola entre muestras
+  de posición/tiempo; la precisión depende de su frecuencia y calidad.
+  Para aprender una referencia debes completar una vuelta limpia observada desde
+  su inicio. Si abres la app a media vuelta, esa vuelta no se utiliza como referencia.
+  No graba vueltas inválidas, de boxes, parciales, con retrocesos o grandes cortes.
+  Cambiar carrera, reiniciar sesión o cambiar auto limpia la referencia en vivo.
+  Una pérdida temporal de memoria conserva la mejor, pero descarta la vuelta parcial.
+  Mientras no haya referencia propia, Δ ACC usa delta y signo que envía ACC.
+  Ya no requiere el tiempo estimado del juego para mostrar un delta válido.
+  Segundos con tres decimales, por ejemplo −0.327 s. Centro = cero y cada lado
+  de la barra corresponde a 1 segundo. La cifra no se recorta al saturar la barra.
+  SIN REF. indica que todavía falta una vuelta de referencia; no significa cero.
+  PAUSA e INVÁLIDA distinguen esos casos. En boxes/replay/sin señal no compara.
+  Diagnóstico incluye campos originales y estado de captura de la referencia.
+• Últimos sectores: panel SECT con S1/S2/S3 en vertical y dos columnas, una
+  por cada última vuelta recibida de tu sesión. Tiempo real arriba; delta abajo.
+  Cada vuelta se compara con la mejor vuelta limpia COMPLETADA ANTES de ella,
+  para conservar la mejora de un nuevo récord. No se compara consigo misma.
+  Verde: ganancia, rojo: pérdida. × indica inválida/parcial/boxes; estas no se
+  usan para comparar ni como referencia. — indica sector o referencia ausente.
+  Espera una vuelta completa recibida por UDP y se limpia al cambiar de sesión.
+  No usa vueltas guardadas de otra carrera como referencia en vivo.
+• Historial: pestaña Historial > circuito > sesión > vueltas y sectores.
+  Detecta el ID/nombre de pista de ACC. Guarda tu auto, dorsal, piloto, modalidad,
+  fecha, tiempos, sectores y estado de vuelta; permite revisar todo al cerrar ACC.
+  Flechas o rueda para navegar; Volver sube al nivel anterior.
+  Guarda cada vuelta recibida en hasta dos segundos y al salir de LANDELTA normalmente (Salir de LANDELTA).
+  Circuitos nuevos aparecen al completar la primera vuelta recibida allí.
+  Una vuelta PARCIAL tiene tiempo oficial recibido, pero no se observó completa
+  y no se usa para ritmo. INVÁLIDA no suma al mejor tiempo ni al ritmo.
+  BOXES se excluye del ritmo; LIMPIA sí cuenta cuando se observó completa.
+  Solo comienza a registrar a partir de esta versión y mientras LANDELTA está abierto.
+  No importa carreras previas. Al reiniciar LANDELTA en una misma carrera, registra
+  el siguiente tramo como otra sesión. Demo muestra ejemplos sin guardarlos.
+  Las reconexiones de red no duplican vueltas; los cambios de carrera se separan.
+  Guarda archivos separados y reemplazos atómicos; si falla avisa y reintenta.
+• Conexión automática y reconexión al cambiar de sesión o reiniciar ACC.
+  Reintentos progresivos ante errores, respuestas tardías o contraseña rechazada.
+  Relee el puerto y contraseña configurados cada cinco segundos.
+  Detecta el proceso real de ACC y libera la memoria de una ejecución anterior.
+  Borra pilotos, vueltas, sectores, avisos y pasos guardados al cambiar de evento,
+  sesión, modalidad o circuito; también al reiniciar una carrera o salir al menú.
+  Esta limpieza es de los datos en vivo; conserva las sesiones del historial.
+  Detecta saltos de replay y distingue las pausas de las pérdidas de conexión.
+  En pausa los tiempos permanecen detenidos. En replay sigue el coche enfocado.
+• Relativos: las filas sin datos muestran —; un corte de 4–8 segundos puede
+  mostrar al último piloto como SEÑAL?, sin gap, antes de retirarlo.
+• Inicio con Windows opcional mediante acceso del usuario; icono de bandeja.
+• Tamaño, opacidad, visibilidad y posiciones guardadas entre arranques.
+• Transparencia por píxel: espacios vacíos totalmente transparentes; Fondo
+  ajusta solo las placas detrás de los datos, no la opacidad del texto.
+  Fondo inicial al 25%, ajustable hasta 0%. Las letras tienen sombra para
+  conservar contraste. La migración desde 0.1 conserva posiciones y tamaño.
+• Modo demo con pilotos y tiempos simulados, separado de los datos reales.
+  Incluye un doblado delante, un coche que te lleva vuelta detrás, una PEN
+  simulada para tu auto y un aviso ! simulado para probar la apariencia.
+• Diagnóstico desde Conexión > Diagnóstico. No incluye contraseñas.
+
+ATAJOS GLOBALES
+Ctrl + Alt + F10 : bloquear / desbloquear los paneles.
+Ctrl + Alt + F11 : mostrar / ocultar los overlays.
+Ctrl + Alt + F12 : restaurar la ventana de control.
+Si otra aplicación ocupa un atajo, usa los botones del control.
+
+PRUEBA SIN JUEGO
+Abre ABRIR-DEMO.bat, o usa Probar modo demo en el control.
+Los números en demo son ficticios. El modo demo nunca se activa por falta de
+conexión. Pulsa Usar datos de ACC para regresar a telemetría real.
+
+CONFIGURACIÓN DEL JUEGO
+Lee el puerto y contraseña existentes en broadcasting.json. Si ya está activo,
+los conserva. Si el puerto está deshabilitado, lo activa en 9000 cuando ACC
+está cerrado. Preserva las otras claves, incluida la contraseña de comandos.
+Antes de cambiar un archivo existente crea broadcasting.json.vortex-*.bak.
+Admite JSON UTF-8 y UTF-16 LE/BE con o sin BOM. Usa el nombre de clave de ACC: updListenerPort.
+No toca los ajustes gráficos ni abre puertos del router. Solo usa 127.0.0.1.
+Para restaurar: cierra ACC y LANDELTA y sustituye broadcasting.json con el .bak.
+
+SI NO SE VE / NO LLEGAN DATOS
+• Ventana sin bordes: el modo de pantalla completa exclusiva puede tapar overlays.
+• Sin pilotos pero con tus tiempos: son conexiones distintas. Cierra ACC,
+  entra en Conexión > Reparar conexión de pilotos y luego vuelve a abrir ACC.
+  El botón respalda la configuración y conserva puerto/contraseñas válidos.
+  En Conexión puedes distinguir tu memoria local del registro y parrilla UDP.
+  Si sigue sin pilotos, usa Diagnóstico y comparte el archivo generado.
+  Se reconecta automáticamente si hay sesión pero faltan autos durante 8 segundos.
+• Si se activó con ACC abierto: cierra y abre ACC una vez.
+• Tu auto aparece pero no los demás: falta el canal UDP. Revisa broadcasting.json
+  y que ACC pueda recibir comunicaciones locales en tu firewall.
+• Los relativos muestran coches desde que llega su posición. Los tiempos
+  necesitan pasos observados o una vuelta de referencia; hasta entonces ponen —.
+• En replay/espectador sin memoria de jugador, sigue el auto enfocado de ACC.
+• Para reportar un fallo: captura los paneles y el estado de Conexión; agrega
+  el archivo que abre el botón Diagnóstico y el nombre del circuito/sesión.
+
+LÍMITES DE ESTA BETA
+Los relativos y el gap de carrera son estimaciones (~), no tiempos oficiales
+de paso por cada punto del circuito. Pueden cambiar de precisión en curvas,
+salidas, coches detenidos y pits. La clasificación sí usa la posición de ACC.
+Los datos atrasados se ocultan. No se sustituye falta de telemetría por demo.
+No incluye mapa, spotter, análisis de neumáticos ni aplicación para teléfono.
+Está compilado para Windows y se verificó el lector con pruebas automatizadas.
+La lógica se ha probado con práctica, clasificación, carrera, hotlap, hotstint,
+superpole y replay simulados. No hay filtros que excluyan circuitos o clases de
+coches. Aun así, no se ha validado con todas las carreras/servidores reales:
+este entorno no puede ejecutar ACC ni comprobar la conexión real en Windows.
+El EXE de prueba no tiene firma digital comercial.
+
+DATOS LOCALES
+%LOCALAPPDATA%\VortexACC\settings.json (posición/visibilidad/tamaño y ruta de ACC).
+%LOCALAPPDATA%\VortexACC\diagnostico.txt (solo al pulsar Diagnóstico).
+%LOCALAPPDATA%\VortexACC\history\*.json (vueltas por sesión, desde Beta 0.5).
+Para respaldar el historial, cierra LANDELTA y copia la carpeta history.
+No registra cuentas, no transmite datos de carrera a internet ni instala servicios.
+Inicio automático: shell:startup\LANDELTA-Auto.lnk (detecta el antiguo VortexACC-Auto.lnk); desactívalo antes de borrar
+el EXE. Puedes quitar ese acceso desde la carpeta Inicio de Windows.
+Para quitar LANDELTA: cierra la app y elimina la carpeta extraída. Opcionalmente
+borra %LOCALAPPDATA%\VortexACC y restaura el respaldo de broadcasting.json.
+
+DESARROLLO
+src/ contiene el programa original C++17; vendor/ incluye nlohmann/json (MIT).
+build-windows.bat compila con MinGW-w64/MSYS2 UCRT64. El EXE incluido usa enlace
+estático del runtime del compilador; sus DLL importadas son componentes de Windows.
+tests/test_telemetry.cpp verifica protocolo v4 y layout de memoria compartida.
+También cubre 216000 actualizaciones, 60 coches, cambios de sesión y tiempos.
+tests/test_connection_loop.py ejecuta las funciones de conexión del programa
+con sockets y memoria simulados: reintentos, errores, menú, pausa y datos viejos.
+tests/test_analytics.cpp prueba ritmo, alcance, archivos, reconexión y duplicados.
+CAMBIOS-0.11.txt detalla marca, delta y aparición al iniciar sesión.
+CAMBIOS-0.10.txt conserva las notas del inicio automático y bandeja anterior.
+tests/test_background.cpp y test_background_loop.py prueban sesiones/visibilidad.
+tests/test_startup.py prueba los accesos de inicio con COM simulado.
+CAMBIOS-0.9.txt detalla el modo compacto, pedales, delta y últimos sectores.
+tests/test_driving.cpp prueba pedales, delta nativo y sectores.
+tests/test_lap_delta.cpp prueba la referencia propia, cortes e invalidaciones.
+tests/test_settings.py prueba migración y guardado de los siete paneles.
+CAMBIOS-0.7.txt detalla la corrección de codificación y lectura al arrancar ACC.
+CAMBIOS-0.6.txt detalla la recuperación de pilotos.
+CAMBIOS-0.5.txt detalla los criterios y límites del análisis.
+Vista previa: el diseño se renderiza con las mismas funciones de dibujo exportadas
+a SVG; no es una captura de una carrera real. Incluida en Vista-demo.png.
+
+REFERENCIAS DEL PROTOCOLO
+Kunos ksBroadcastingNetwork SDK (incluido con ACC Dedicated Server).
+https://github.com/angel-git/acc-broadcasting (copia histórica del SDK; versión 2).
+https://pkg.go.dev/github.com/sparkoo/acctelemetry-go (layout v4 y memoria).
+https://app.unpkg.com/acc-broadcast@1.0.1/files/enums.md (tipos y campos v4).
+https://app.unpkg.com/acc-broadcast@1.0.1/files/structs.js (evento 7 y CarId).
+https://github.com/rrennoir/PyAccSharedMemory (penalización del jugador).
+https://github.com/MorGuux/AssettoCorsaCompetizioneSharedMemory/blob/master/Physics.cs
+https://github.com/MorGuux/AssettoCorsaCompetizioneSharedMemory/blob/master/Graphics.cs
+(prefijo de física y campos de delta; consultados para Beta 0.9).
+Implementación independiente, sin afiliación con Kunos, RaceLab ni SRO.
+
+REFERENCIAS DE WINDOWS
+https://learn.microsoft.com/en-us/windows/win32/shell/links
+https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shell_notifyiconw
+https://learn.microsoft.com/en-us/windows/win32/shell/taskbar

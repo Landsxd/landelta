@@ -8,9 +8,7 @@ Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands
 
 **Beta 0.11 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
 
-![Vista de los overlays con datos simulados](Vista-demo.png)
-
-> La imagen muestra el diseño con datos simulados. El proyecto está en desarrollo; la compilación y las pruebas de esta beta se verificaron en Linux, con transporte y ventanas simulados. No sustituyen una prueba de esta versión en ACC real bajo Windows.
+> El proyecto está en desarrollo. Las pruebas de lógica usan transporte y ventanas simulados. No sustituyen una prueba de esta versión en ACC real bajo Windows.
 
 ## Descargar y empezar
 

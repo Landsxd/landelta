@@ -1,0 +1,42 @@
+# Compilaciones y paquetes descargables: se publican como assets de Releases.
+*.exe
+*.o
+*.obj
+*.dll
+*.pdb
+*.zip
+build/
+dist/
+
+# Pruebas nativas sin extensión.
+tests/test_telemetry
+tests/test_analytics
+tests/test_config_codec
+tests/test_relatives
+tests/test_background
+tests/test_driving
+tests/test_lap_delta
+
+# Datos locales del juego y de la app.
+settings.json
+broadcasting.json
+diagnostico.txt
+history/
+*.bak
+*.tmp
+.env
+.env.*
+!.env.example
+
+# Entorno de desarrollo.
+__pycache__/
+*.pyc
+.venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+## Design exports stay local; they can contain example driver/session data.
+/Vista-*.png
+/Vista-*.svg
+/dist/

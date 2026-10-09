@@ -1,0 +1,44 @@
+VORTEX ACC — BETA 0.10 — INICIO AUTOMÁTICO Y BANDEJA
+
+ACTIVAR UNA VEZ
+1. Cierra la versión anterior. Guarda VortexACC.exe en una carpeta fija y ábrelo.
+2. Inicio > Iniciar con Windows > Activar.
+3. Pulsa Dejar en segundo plano. Puedes abrir ACC inmediatamente para probar.
+En el próximo inicio de sesión de Windows, Vortex arrancará oculto.
+
+COMPORTAMIENTO
+• Icono junto al reloj: abrir control, ocultar overlays, configurar inicio o salir.
+• X y minimizar dejan Vortex en segundo plano; no terminan el programa.
+• Salir de Vortex (Inicio o clic derecho en el icono) termina el proceso.
+• Fuera de ACC no muestra overlays. Espera datos de una sesión antes de mostrarlos.
+• Al entrar en práctica, clasificación o carrera, activa los paneles elegidos y
+  los bloquea para que los clics pasen al juego. No abre el control encima de ACC.
+• Volver al menú o cerrar ACC oculta los paneles. Conserva posiciones e historial.
+• Una pérdida breve de telemetría tolera hasta 3 segundos sin parpadear el HUD;
+  cada panel mantiene además sus propios límites para no mostrar tiempos viejos.
+• Respeta los paneles desactivados y la ocultación manual con Ctrl+Alt+F11.
+• La demo sigue disponible para acomodar paneles sin el juego. Enviar a bandeja
+  mediante X/minimizar o Inicio abandona la demo y vuelve a esperar datos reales.
+• Sin ACC ni demo, sondeo a 1 s y timer de pedales apagado. Durante juego, conserva
+  los intervalos anteriores. No hay un servicio de Windows ni elevación de permisos.
+• Recupera el icono si Explorer reinicia. Si falla la bandeja al arrancar oculto,
+  muestra el control para que el programa siga siendo accesible.
+• Una segunda ejecución no duplica Vortex; la apertura manual recupera su control.
+  Una segunda ejecución con --background no saca la ventana al frente.
+
+INICIO CON WINDOWS
+• Crea solo VortexACC-Auto.lnk en la carpeta Inicio del usuario actual.
+• El acceso apunta a este EXE con el argumento --background y su carpeta de trabajo.
+• Desactivar elimina ese acceso, sin tocar otros programas de inicio.
+• No borres ni muevas el EXE. Si cambias de carpeta, abre la copia nueva, entra en
+  Inicio y pulsa Activar para actualizar el acceso. Sal de la copia anterior primero.
+• Al actualizar el EXE en la misma ruta, el acceso existente sigue apuntando allí.
+• Si Windows lo desactiva desde Aplicaciones de inicio, habilítalo también allí.
+  Vortex no modifica restricciones de Windows ni de un administrador.
+
+VALIDACIÓN
+Se probaron las transiciones de sesión y las funciones reales de ventanas/timers
+con Win32 simulado. Accesos de inicio: argumentos, rutas con espacios, activación,
+actualización, borrado y fallos de COM/guardado con preservación del acceso previo.
+El EXE está compilado para Windows x64. Falta probar el inicio de sesión y el icono
+de bandeja reales en Windows; este entorno no dispone de ACC/Windows ejecutándose.

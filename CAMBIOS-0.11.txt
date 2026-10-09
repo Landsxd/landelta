@@ -1,0 +1,38 @@
+LANDELTA · BETA 0.11
+===================
+• Vortex ahora se llama LANDELTA: EXE, metadatos de Windows, control,
+  bandeja, diagnóstico, demo e icono. Logo PNG transparente incluido.
+• Configuración e historial conservan su carpeta compatible VortexACC.
+  Mutex y clase de ventana compartidos impiden dos copias viejas/nuevas simultáneas.
+• Al activar inicio con Windows, actualiza el acceso al EXE actual y migra el nombre.
+• GAS y FRENO muestran solo barras; sin porcentajes y con más ancho útil.
+• Corregida una condición que descartaba el delta si estimatedMs no llegaba.
+• Δ MEJOR aprende el paso por cada punto de una vuelta limpia completa.
+  Usa interpolación local tiempo/posición, no una proporción del tiempo total.
+  Δ ACC es la alternativa mientras aún no se ha observado una referencia propia.
+• Referencias solo de la sesión y auto actuales. Excluye parciales, boxes,
+  inválidas, retrocesos, saltos de telemetría y vueltas incompletas.
+• Mostrar overlays al entrar en sesión: ON por defecto, configurable en Inicio.
+  Detecta entrada, cambio de modalidad/índice y reinicios por vuelta descendente, reloj o señal de reinicio UDP.
+  La señal UDP de reinicio/cambio de circuito limpia también el delta local.
+  La señal de sesión UDP activa overlays aunque aún falten paquetes de coches.
+  Nuevas fuentes tardías no vuelven a mostrar lo ocultado en la misma sesión.
+  Menú/ACC cerrado ocultan overlays. F11 funciona durante la sesión actual.
+  Solo se muestran paneles previamente activados, bloqueados y sin tomar foco.
+• Diagnóstico ampliado con campos de delta, referencia capturada y visibilidad.
+• Configuración schema 5: nuevo ajuste autoShowOnSession, conservando paneles.
+
+PRUEBA RECOMENDADA EN WINDOWS
+Cierra la copia anterior desde bandeja > Salir. Abre LANDELTA.exe.
+Si usabas arranque de Windows, Inicio > Activar (EXE en carpeta fija).
+ACC en ventana sin bordes. Inicio > Mostrar overlays al entrar en sesión: ON.
+Entra en pista y completa una vuelta limpia entera con la app abierta. En la
+siguiente vuelta, cambia el ritmo: Δ MEJOR debe moverse y cambiar de signo/color.
+Prueba práctica > carrera y menú > carrera: reaparecen los paneles activados.
+Usa Diagnóstico si el delta sigue sin referencia; muestra el tiempo y las
+muestras de la vuelta capturada. No hace falta repetir Reparar si UDP funciona.
+
+LIMITACIÓN DE VALIDACIÓN
+Pruebas automatizadas de lógica, integración simulada y compilación x64.
+No se ha ejecutado este EXE dentro de Windows ni con una carrera real de ACC
+porque este entorno no dispone del juego ni de Windows.
