@@ -86,6 +86,14 @@ El resultado es `LANDELTA.exe` en la raíz del proyecto. El ejecutable distribui
 
 El flujo de GitHub Actions incluye pruebas de lógica e integración simulada en Linux y compilación en Windows. La [primera publicación de la beta](https://github.com/Landsxd/landelta/actions/runs/37895981404) superó ambos trabajos y la verificación de sus descargas. Compilar correctamente no certifica por sí solo una carrera real.
 
+## Apoya LANDELTA 🏁
+
+Si LANDELTA te acompaña en pista y quieres apoyar su desarrollo, puedes hacer una donación voluntaria. Tu apoyo ayuda a dedicar más tiempo a corregir errores, mejorar la conexión con ACC y crear nuevas funciones.
+
+### [💚 Apoyar LANDELTA por PayPal](https://paypal.me/landeroslal)
+
+Donar es opcional y no es necesario para descargar ni usar la app. Gracias por formar parte del proyecto y ayudar a que siga mejorando vuelta a vuelta.
+
 ## Créditos
 
 Desarrollo: **Lands**. Nombre anterior: Vortex ACC Overlay.

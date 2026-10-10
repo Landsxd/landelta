@@ -39,4 +39,4 @@ No subas el ZIP como sustituto del código del repositorio. El código va en arc
 
 ## Donaciones
 
-No se ha agregado ningún destinatario ni enlace de pago. Cuando se elija la plataforma y exista tu enlace, se podrá añadir al README y a `.github/FUNDING.yml`.
+El enlace de apoyo autorizado por Lands es https://paypal.me/landeroslal. Está incluido en el README y en `.github/FUNDING.yml` para el botón Sponsor de GitHub. Las donaciones son voluntarias y no son necesarias para descargar ni usar LANDELTA.
