@@ -15,6 +15,9 @@ const values=columns.map(()=>0);values[3]=1;values[6]=.5;
 assert.strictEqual(readCSV(columns.join(',')+'\n'+values.join(',')).size,1);
 const duplicate=rows.flatMap(r=>[r,r]);assert.deepStrictEqual(sectors(duplicate,50),sectors(rows,50));
 assert.strictEqual(quality(rows).observed_hz,10);
+assert.strictEqual(time(94340),'1:34.340');
+const summary=lapSummary(new Map([[1,[{...rows[0],sector:1,last_sector_ms:30000},{...rows[1],sector:2,last_sector_ms:31000}]],[2,[{...rows[2],last_lap_ms:94000}]]]));
+assert.strictEqual(summary[0].official_lap_ms,94000);assert.deepStrictEqual(summary[0].official_sectors_ms,[30000,31000,33000]);assert.strictEqual(summary[1].official_lap_ms,null);
 console.log('PASS: production analyzer schema, missing values, interpolation, duplicate graphics, gaps, measured Hz');
 '''
 subprocess.run(['node'], input=setup+script+checks, text=True, check=True)
