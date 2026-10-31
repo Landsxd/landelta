@@ -23,8 +23,8 @@ struct Studio {
  ~Studio(){stop();}
  void capture(){
   Mapping physics,graphics,info;std::ofstream csv;DWORD pid=0;uint64_t check=0,flush=0,lastSample=0,opened=0,probe=0;
-  int packet=-1,lap=-1,session=-1,lapMs=-1,segment=0;std::string identity;
-  auto finish=[&](){if(csv.is_open()){csv.flush();if(!csv)throw std::runtime_error("disk");csv.close();}packet=-1;lap=-1;lapMs=-1;};
+  int packet=-1,session=-1,segment=0;std::string identity;LapTracker tracker;
+  auto finish=[&](){if(csv.is_open()){csv.flush();if(!csv)throw std::runtime_error("disk");csv.close();}packet=-1;tracker=LapTracker{};};
   try{fs::create_directories(directory);
    while(running){auto now=GetTickCount64();if(now-check>=1000){auto current=process();check=now;if(current!=pid){finish();physics.close();graphics.close();info.close();pid=current;identity.clear();}}
     if(!pid){message(L"Esperando Assetto Corsa (2014). Cierra ACC si está abierto.");std::this_thread::sleep_for(std::chrono::milliseconds(100));continue;}
@@ -32,29 +32,28 @@ struct Studio {
     Physics p{};Graphics g{};Static st{};
     if(!physics.read(p)||!graphics.read(g)||!info.data){message(L"Esperando memoria de AC...");physics.close();graphics.close();info.close();std::this_thread::sleep_for(std::chrono::milliseconds(100));continue;}
     memcpy(&st,info.data,sizeof st);auto car=label(st.car),track=label(st.track),layout=label(st.layout);auto key=car+"|"+track+"|"+layout;
-    if(g.status!=2){if(g.status==0||g.status==1)finish();message(g.status==1?L"Replay: no se registra como conducción real.":L"Pausa / transición: esperando datos en vivo.");if(now-probe>=1000){physics.close();graphics.close();info.close();probe=now;}std::this_thread::sleep_for(std::chrono::milliseconds(50));continue;}
+    if(g.status!=2){message(g.status==1?L"Replay: captura suspendida, sesión conservada.":L"Pausa / transición: sesión conservada.");if(now-probe>=1000){physics.close();graphics.close();info.close();probe=now;}std::this_thread::sleep_for(std::chrono::milliseconds(50));continue;}
     if(!valid(p,g)||car.empty()||track.empty()){message(L"Muestra no válida; no se guarda.");std::this_thread::sleep_for(std::chrono::milliseconds(10));continue;}
     if(p.packet==packet){if(lastSample&&now-lastSample>2000){message(L"Lectura detenida; reabriendo memoria...");physics.close();graphics.close();info.close();}std::this_thread::sleep_for(std::chrono::milliseconds(10));continue;}
-    bool reset=key!=identity||session!=g.session||g.laps<lap||(g.laps==lap&&g.currentMs+1500<lapMs);
+    bool reset=key!=identity||session!=g.session;
     if(reset){finish();++segment;}if(!csv.is_open()){
-     opened=now;auto base="AC-"+std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())+"-"+std::to_string(++segment);
+     opened=now;auto base=safeName(track)+"_"+safeName(layout)+"_AC_"+std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())+"-"+std::to_string(++segment);
      csv.open(directory/(base+".csv"),std::ios::out|std::ios::trunc);csv.imbue(std::locale::classic());csv<<std::setprecision(9);
-     nlohmann::json meta={{"schema",1},{"game","AC"},{"car",car},{"track",track},{"layout",layout},{"track_length_m",std::isfinite(st.length)?st.length:0},{"session_type",g.session},{"requested_poll_ms",10},{"note","Independent physics/graphics pages. Recorded Hz is not guaranteed. Steering stored in native units. Validity is unknown; tyres_out is only a warning. No replay capture."}};
-     std::ofstream metadata(directory/(base+".json"));metadata<<meta.dump(2);metadata.close();if(!metadata)throw std::runtime_error("metadata");
-     csv<<"capture_ms,physics_packet,graphics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,fuel_l,acc_x_g,acc_y_g,acc_z_g,world_x,world_y,world_z,sector,last_sector_ms,in_pit,tyres_out,penalty_s,gap_ms\n";
+     csv<<"capture_ms,physics_packet,graphics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,fuel_l,acc_x_g,acc_y_g,acc_z_g,world_x,world_y,world_z,sector,last_sector_ms,in_pit,tyres_out,penalty_s,gap_ms,stint,raw_lap,track_id,car_id,layout_id,track_length_m,microsector_50\n";
      identity=key;session=g.session;lastSample=0;count=0;
     }
-    csv<<now-opened<<','<<p.packet<<','<<g.packet<<','<<g.laps+1<<','<<g.currentMs<<','<<g.lastMs<<','<<g.spline<<','<<p.speed<<','<<p.gas<<','<<p.brake<<','<<p.steer<<','<<p.gear<<','<<p.rpm<<','<<p.fuel;
+    int recordedLap=tracker.update(g);
+    csv<<now-opened<<','<<p.packet<<','<<g.packet<<','<<recordedLap<<','<<g.currentMs<<','<<g.lastMs<<','<<g.spline<<','<<p.speed<<','<<p.gas<<','<<p.brake<<','<<p.steer<<','<<p.gear<<','<<p.rpm<<','<<p.fuel;
     for(float a:p.acceleration)csv<<','<<a;for(float x:g.coordinates)csv<<','<<x;
-    csv<<','<<g.sector<<','<<g.lastSector<<','<<(g.pit||g.pitLane)<<','<<p.tyresOut<<','<<g.penalty<<','<<(lastSample?now-lastSample:0)<<'\n';
-    packet=p.packet;lap=g.laps;lapMs=g.currentMs;lastSample=now;++count;
+    csv<<','<<g.sector<<','<<g.lastSector<<','<<(g.pit||g.pitLane)<<','<<p.tyresOut<<','<<g.penalty<<','<<(lastSample?now-lastSample:0)<<','<<tracker.stint<<','<<g.laps+1<<','<<encoded(track)<<','<<encoded(car)<<','<<encoded(layout)<<','<<(std::isfinite(st.length)?st.length:0)<<','<<std::min(50,int(g.spline*50)+1)<<'\n';
+    packet=p.packet;lastSample=now;++count;
     if(now-flush>=1000){csv.flush();if(!csv)throw std::runtime_error("disk");flush=now;double hz=now>opened?count*1000./(now-opened):0;
      message(L"GRABANDO · "+wide(track)+L" · "+wide(car)+L"\nVuelta "+std::to_wstring(g.laps+1)+L" · "+std::to_wstring(g.currentMs/1000.)+L" s\n"+std::to_wstring(count)+L" muestras · "+std::to_wstring(int(hz))+L" Hz medios (incluye pausas)\nGas "+std::to_wstring(int(p.gas*100))+L"% · Freno "+std::to_wstring(int(p.brake*100))+L"% · "+std::to_wstring(int(p.speed))+L" km/h");}
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
    }finish();message(L"Grabación detenida y archivos guardados.");
   }catch(...){message(L"ERROR de captura / escritura. Grabación detenida. Comprueba espacio y permisos.");}running=false;
  }
- void start(){stop();running=true;worker=std::thread([this]{capture();});}
+ void start(){if(running)return;stop();running=true;worker=std::thread([this]{capture();});}
 };
 inline Studio studio;
 inline LRESULT CALLBACK proc(HWND h,UINT m,WPARAM w,LPARAM l){switch(m){
@@ -63,7 +62,7 @@ inline LRESULT CALLBACK proc(HWND h,UINT m,WPARAM w,LPARAM l){switch(m){
   CreateWindowW(L"BUTTON",L"Detener y guardar",WS_CHILD|WS_VISIBLE,184,190,170,40,h,(HMENU)2,inst,nullptr);
   CreateWindowW(L"BUTTON",L"Abrir sesiones",WS_CHILD|WS_VISIBLE,364,190,160,40,h,(HMENU)3,inst,nullptr);
   CreateWindowW(L"BUTTON",L"Analizar vueltas",WS_CHILD|WS_VISIBLE,534,190,180,40,h,(HMENU)4,inst,nullptr);
-  CreateWindowW(L"STATIC",L"AC Studio · experimental\n\n1. Abre AC (no ACC), entra a pista y pulsa Grabar.\n2. Conduce; se guardan todas las muestras nuevas, incluso vueltas parciales.\n3. Detén la captura. Abre Analizar vueltas y carga el CSV.\n\nEl análisis es local. Comparación por distancia, pedales, velocidad y microsectores.\nAdjunta CSV + JSON al chat: no necesitas grabar video para analizar estos canales.\n\nMinimizar o cerrar esta ventana mantiene la captura. Para finalizar usa Detener.\nSalir de LANDELTA también guarda y detiene la captura.",WS_CHILD|WS_VISIBLE,24,255,740,250,h,nullptr,inst,nullptr);SetTimer(h,1,500,nullptr);return 0;}
+  CreateWindowW(L"STATIC",L"AC Studio · sesión única\n\n1. Abre AC (no ACC), entra a pista y pulsa Grabar.\n2. Conduce; se guardan todas las muestras nuevas, incluso vueltas parciales.\n3. Detén la captura. Abre Analizar vueltas y carga el CSV.\n\nEl análisis es local. Comparación por distancia, pedales, velocidad y microsectores.\nAdjunta el CSV al chat: no necesitas grabar video para analizar estos canales.\n\nMinimizar o cerrar esta ventana mantiene la captura. Para finalizar usa Detener.\nSalir de LANDELTA también guarda y detiene la captura.",WS_CHILD|WS_VISIBLE,24,255,740,250,h,nullptr,inst,nullptr);SetTimer(h,1,500,nullptr);return 0;}
  case WM_TIMER:{std::lock_guard<std::mutex> lock(studio.mutex);SetWindowTextW(studio.statusLabel,studio.status.c_str());return 0;}
  case WM_COMMAND:if(LOWORD(w)==1)studio.start();if(LOWORD(w)==2)studio.stop();if(LOWORD(w)==3){std::error_code ec;fs::create_directories(studio.directory,ec);ShellExecuteW(h,L"open",studio.directory.c_str(),nullptr,nullptr,SW_SHOW);}if(LOWORD(w)==4){wchar_t exe[32768]{};GetModuleFileNameW(nullptr,exe,32768);auto path=fs::path(exe).parent_path()/L"tools"/L"ac-analyzer.html";if(fs::exists(path))ShellExecuteW(h,L"open",path.c_str(),nullptr,nullptr,SW_SHOW);else MessageBoxW(h,L"Extrae el ZIP completo: falta tools/ac-analyzer.html.",L"AC Studio",MB_OK|MB_ICONINFORMATION);}return 0;
  case WM_CLOSE:ShowWindow(h,SW_HIDE);return 0;

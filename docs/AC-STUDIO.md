@@ -1,5 +1,7 @@
 # AC Studio — experimental, no validado en pista
 
+**Documento de la primera versión. Para la versión actual, consulta [sesión única y visor](AC-STUDIO-SESIONES.md); sustituye las instrucciones de archivos CSV + JSON de esta página.**
+
 Dentro de LANDELTA, pulsa **AC Studio** (arriba a la derecha). ACC conserva sus paneles actuales. AC Studio es un grabador separado para Assetto Corsa (2014), incluidos mods que expongan la memoria estándar. No usa el UDP de ACC ni modifica el juego.
 
 1. Extrae el paquete completo, incluido `tools/ac-analyzer.html`.
