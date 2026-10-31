@@ -12,6 +12,8 @@ Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands
 
 ## Descargar y empezar
 
+**En desarrollo: AC Studio.** Grabación y análisis local para Assetto Corsa (2014), con comparación de vueltas y microsectores. Consulta [alcance, uso y limitaciones](docs/AC-STUDIO.md). Es experimental: no forma parte de la descarga estable 0.12.3 enlazada abajo y aún requiere validación en pista.
+
 Abre la [beta v0.12.3](https://github.com/Landsxd/landelta/releases/tag/v0.12.3) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
 
 1. Extrae el ZIP en una carpeta fija y abre `LANDELTA.exe`.
