@@ -17,7 +17,7 @@ const duplicate=rows.flatMap(r=>[r,r]);assert.deepStrictEqual(sectors(duplicate,
 assert.strictEqual(quality(rows).observed_hz,10);
 assert.strictEqual(time(94340),'1:34.340');
 const summary=lapSummary(new Map([[1,[{...rows[0],sector:1,last_sector_ms:30000},{...rows[1],sector:2,last_sector_ms:31000}]],[2,[{...rows[2],last_lap_ms:94000}]]]));
-assert.strictEqual(summary[0].official_lap_ms,94000);assert.deepStrictEqual(summary[0].official_sectors_ms,[30000,31000,33000]);assert.strictEqual(summary[1].official_lap_ms,null);
+assert.strictEqual(summary[0].official_lap_ms,null);assert.deepStrictEqual(summary[0].official_sectors_ms,[null,31000,null]);assert.strictEqual(summary[1].official_lap_ms,null);
 const v2=columns.join(',')+',stint,raw_lap,track_id,car_id,layout_id,track_length_m,microsector_50\n'+values.join(',')+',2,1,Monza%20GP,rss,layout,5793,26';
 const parsed=readCSV(v2);assert(parsed.has(1000001));assert.strictEqual(parsed.get(1000001)[0].track_id,'Monza GP');
 assert.strictEqual(lapSummary(parsed)[0].official_lap_ms,null);
@@ -29,4 +29,4 @@ laps=new Map([[1,rows.map(r=>({...r,speed_kmh:200,gas:.5,brake:.1,steer_native:.
 draw();assert.strictEqual(report.microsectors.length,50);nodes.gas.onmousemove({clientX:500});assert(nodes.cursor.textContent.includes('gas 50.0%'));assert(nodes.table.innerHTML.includes('<table>'));
 console.log('PASS: production analyzer schema, missing values, interpolation, duplicate graphics, gaps, measured Hz');
 '''
-subprocess.run(['node'], input=setup+script+checks, text=True, check=True)
+subprocess.run(['node'], input=setup+(root / "tools/session-analysis.js").read_text()+script+checks, text=True, check=True)

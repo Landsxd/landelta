@@ -21,7 +21,7 @@ def main():
     exe = output / 'LANDELTA.exe'
     if binary != exe:
         shutil.copyfile(binary, exe)
-    files = [ROOT / 'tools/ac-analyzer.html', *sorted((ROOT / 'licenses').glob('*.txt')),
+    files = [ROOT / 'tools/ac-analyzer.html', ROOT / 'tools/session-analysis.js', *sorted((ROOT / 'licenses').glob('*.txt')),
              ROOT / 'vendor/JSON-LICENSE.txt']
     if not all(file.is_file() for file in files):
         raise SystemExit('Missing runtime file or required license.')

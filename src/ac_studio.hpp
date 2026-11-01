@@ -39,13 +39,13 @@ struct Studio {
     if(reset){finish();++segment;}if(!csv.is_open()){
      opened=now;auto base=safeName(track)+"_"+safeName(layout)+"_AC_"+std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())+"-"+std::to_string(++segment);
      csv.open(directory/(base+".csv"),std::ios::out|std::ios::trunc);csv.imbue(std::locale::classic());csv<<std::setprecision(9);
-     csv<<"capture_ms,physics_packet,graphics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,fuel_l,acc_x_g,acc_y_g,acc_z_g,world_x,world_y,world_z,sector,last_sector_ms,in_pit,tyres_out,penalty_s,gap_ms,stint,raw_lap,track_id,car_id,layout_id,track_length_m,microsector_50\n";
+     csv<<"capture_ms,physics_packet,graphics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,fuel_l,acc_x_g,acc_y_g,acc_z_g,world_x,world_y,world_z,sector,last_sector_ms,in_pit,tyres_out,penalty_s,gap_ms,stint,raw_lap,track_id,car_id,layout_id,track_length_m,microsector_50,game_version,compound,abs_setting,tc_setting,auto_clutch,auto_blip,stability\n";
      identity=key;session=g.session;lastSample=0;count=0;
     }
     int recordedLap=tracker.update(g);
     csv<<now-opened<<','<<p.packet<<','<<g.packet<<','<<recordedLap<<','<<g.currentMs<<','<<g.lastMs<<','<<g.spline<<','<<p.speed<<','<<p.gas<<','<<p.brake<<','<<p.steer<<','<<p.gear<<','<<p.rpm<<','<<p.fuel;
     for(float a:p.acceleration)csv<<','<<a;for(float x:g.coordinates)csv<<','<<x;
-    csv<<','<<g.sector<<','<<g.lastSector<<','<<(g.pit||g.pitLane)<<','<<p.tyresOut<<','<<g.penalty<<','<<(lastSample?now-lastSample:0)<<','<<tracker.stint<<','<<g.laps+1<<','<<encoded(track)<<','<<encoded(car)<<','<<encoded(layout)<<','<<(std::isfinite(st.length)?st.length:0)<<','<<std::min(50,int(g.spline*50)+1)<<'\n';
+    csv<<','<<g.sector<<','<<g.lastSector<<','<<(g.pit||g.pitLane)<<','<<p.tyresOut<<','<<g.penalty<<','<<(lastSample?now-lastSample:0)<<','<<tracker.stint<<','<<g.laps+1<<','<<encoded(track)<<','<<encoded(car)<<','<<encoded(layout)<<','<<(std::isfinite(st.length)?st.length:0)<<','<<std::min(50,int(g.spline*50)+1)<<','<<encoded(label(st.version))<<','<<encoded(label(g.compound))<<','<<p.abs<<','<<p.tc<<','<<st.autoClutch<<','<<st.autoBlip<<','<<st.stability<<'\n';
     packet=p.packet;lastSample=now;++count;
     if(now-flush>=1000){csv.flush();if(!csv)throw std::runtime_error("disk");flush=now;double hz=now>opened?count*1000./(now-opened):0;
      message(L"GRABANDO · "+wide(track)+L" · "+wide(car)+L"\nVuelta "+std::to_wstring(g.laps+1)+L" · "+std::to_wstring(g.currentMs/1000.)+L" s\n"+std::to_wstring(count)+L" muestras · "+std::to_wstring(int(hz))+L" Hz medios (incluye pausas)\nGas "+std::to_wstring(int(p.gas*100))+L"% · Freno "+std::to_wstring(int(p.brake*100))+L"% · "+std::to_wstring(int(p.speed))+L" km/h");}

@@ -1,5 +1,5 @@
 ; Per-user installation. Keep this AppId stable across future upgrades.
-#define AppVersion "0.13.2"
+#define AppVersion "0.13.3"
 [Setup]
 AppId={{B0498E99-D687-4838-A85F-372EF9BBCA40}
 AppName=LANDELTA
@@ -35,6 +35,8 @@ Source: "..\LANDELTA.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\tools\ac-analyzer.html"; DestDir: "{app}\tools"; Flags: ignoreversion
 Source: "..\licenses\*.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 Source: "..\vendor\JSON-LICENSE.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
+
+Source: "..\tools\session-analysis.js"; DestDir: "{app}\tools"; Flags: ignoreversion
 
 [Icons]
 Name: "{userprograms}\LANDELTA"; Filename: "{app}\LANDELTA.exe"; WorkingDir: "{app}"

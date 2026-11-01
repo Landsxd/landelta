@@ -56,8 +56,8 @@ jobs:
         run: ./tools/test-installer.ps1
       - uses: actions/upload-artifact@v7
         with:
-          name: LANDELTA-Installer-0.13.2
-          path: dist/LANDELTA-Setup-0.13.2.exe
+          name: LANDELTA-Installer-0.13.3
+          path: dist/LANDELTA-Setup-0.13.3.exe
           if-no-files-found: error
           retention-days: 14
       - uses: actions/upload-artifact@v7
