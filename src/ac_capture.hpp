@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include <algorithm>
+#include <string>
 namespace acstudio {
 #pragma pack(push,4)
 struct Physics {
@@ -29,6 +30,25 @@ struct Static {
 static_assert(offsetof(Graphics,laps)==132 && offsetof(Graphics,spline)==248,"AC graphics ABI");
 static_assert(offsetof(Physics,tyresOut)==244 && offsetof(Static,length)==520,"AC physics/static ABI");
 struct Point { double progress=0,ms=0; uint64_t captured=0; };
+// Clock and completed-lap count do not necessarily update in the same frame.
+struct LapTracker {
+ bool have=false,wrapped=false;int raw=0,ms=0,logical=1,stint=1;float progress=0;
+ int update(const Graphics& g){
+  if(have&&progress>.9f&&g.spline<.1f)wrapped=true;
+  if(g.spline>.1f)wrapped=false;
+  if(!have){logical=g.laps+1;have=true;}
+  else if(g.laps<raw){++stint;logical=g.laps+1;}
+  else if(g.currentMs+1500<ms){
+   if(wrapped&&g.spline<.1f&&g.lastMs>0&&g.lastMs<INT32_MAX)logical=std::max(logical+1,g.laps+1);
+   else{++stint;logical=g.laps+1;}wrapped=false;
+  }
+  // If the counter leads the clock, wait for the clock rather than increment twice.
+  if(g.currentMs<1500)logical=std::max(logical,g.laps+1);
+  raw=g.laps;ms=g.currentMs;progress=g.spline;return logical;
+ }
+};
+inline std::string safeName(const std::string& s){std::string out;for(unsigned char c:s){if(out.size()==80)break;out+=((c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='-'||c=='_')?char(c):'_';}return out.empty()?"circuito":out;}
+inline std::string encoded(const std::string& s){const char* hex="0123456789ABCDEF";std::string out;for(unsigned char c:s){if((c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='_'||c=='-')out+=char(c);else{out+='%';out+=hex[c>>4];out+=hex[c&15];}}return out;}
 // Spatial interpolation is an estimate, never extra measured samples.
 inline std::vector<double> microsectors(const std::vector<Point>& points,int bins){
  bins=std::clamp(bins,2,200);std::vector<double> result(bins,NAN),crossings(bins+1,NAN);

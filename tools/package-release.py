@@ -1,9 +1,8 @@
-"""Package a Windows build plus tracked source without local race data."""
+"""Package only runtime files; source remains in GitHub, not the user download."""
 from pathlib import Path
 import argparse
 import hashlib
 import shutil
-import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,9 +21,10 @@ def main():
     exe = output / 'LANDELTA.exe'
     if binary != exe:
         shutil.copyfile(binary, exe)
-    names = subprocess.check_output(['git', 'ls-files', '-z'], cwd=ROOT).decode('utf-8').split('\0')
-    files = [ROOT / name for name in names if name and not name.startswith(('.git', 'Vista-'))]
-    files = [file for file in files if file.is_file() and file != binary]
+    files = [ROOT / 'tools/ac-analyzer.html', ROOT / 'tools/session-analysis.js', *sorted((ROOT / 'licenses').glob('*.txt')),
+             ROOT / 'vendor/JSON-LICENSE.txt']
+    if not all(file.is_file() for file in files):
+        raise SystemExit('Missing runtime file or required license.')
     archive = output / 'LANDELTA-Windows-Beta.zip'
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as package:
         package.write(exe, 'LANDELTA/LANDELTA.exe')
@@ -36,7 +36,7 @@ def main():
     checksums = output / 'SHA256SUMS.txt'
     checksums.write_text(''.join(f'{hashlib.sha256(file.read_bytes()).hexdigest()}  {file.name}\n'
                                for file in (exe, archive)), encoding='utf-8')
-    print(f'Packaged {len(files)} source/doc files, Windows EXE and SHA-256 checksums.')
+    print(f'Packaged Windows EXE, analyzer and licenses only ({len(files)} support files).')
 
 
 if __name__ == '__main__':

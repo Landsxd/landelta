@@ -45,6 +45,26 @@ jobs:
       - name: Package app
         shell: pwsh
         run: python tools/package-release.py --binary LANDELTA.exe --output dist
+      - name: Render actual Windows interface
+        shell: pwsh
+        run: |
+          $p = Start-Process ./LANDELTA.exe -ArgumentList '--ui-preview' -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or !(Test-Path dist/AC-Studio.png) -or !(Test-Path dist/ACC.png)) { throw 'UI render failed' }
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc installer/landelta.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed' }
+      - name: Test Windows installer
+        shell: pwsh
+        run: ./tools/test-installer.ps1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: LANDELTA-Installer-0.13.4
+          path: dist/LANDELTA-Setup-0.13.4.exe
+          if-no-files-found: error
+          retention-days: 14
       - uses: actions/upload-artifact@v7
         with:
           name: LANDELTA-Windows-build
