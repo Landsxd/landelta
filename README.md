@@ -12,7 +12,7 @@ Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands
 
 ## Descargar y empezar
 
-**Nuevo instalador 0.13.3 (AC + ACC):** la compilación de la rama `feature/ac-studio` genera **LANDELTA-Setup-0.13.3.exe** en el artefacto `LANDELTA-Installer-0.13.3` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Descarga el instalador, ejecútalo y abre LANDELTA desde el escritorio. No necesitas el código fuente ni archivos de demo. [Instalación, actualización y límites de validación](docs/INSTALAR.md). La versión del ejecutable debe indicar **0.13.3**. La publicación anterior enlazada abajo no incluye AC Studio.
+**Nuevo instalador 0.13.4 (AC + ACC):** la compilación de la rama `feature/ac-studio` genera **LANDELTA-Setup-0.13.4.exe** en el artefacto `LANDELTA-Installer-0.13.4` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Descarga el instalador, ejecútalo y abre LANDELTA desde el escritorio. No necesitas el código fuente ni archivos de demo. [Instalación, actualización y límites de validación](docs/INSTALAR.md). La versión del ejecutable debe indicar **0.13.4**. La publicación anterior enlazada abajo no incluye AC Studio.
 
 **En desarrollo: AC Studio.** Grabación y análisis local para Assetto Corsa (2014), con comparación de vueltas y microsectores. Consulta [alcance, uso y limitaciones](docs/AC-STUDIO.md). Es experimental: no forma parte de la descarga estable 0.12.3 enlazada abajo y aún requiere validación en pista.
 

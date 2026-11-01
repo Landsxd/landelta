@@ -1,6 +1,6 @@
-# LANDELTA 0.13.3 para Windows
+# LANDELTA 0.13.4 para Windows
 
-Para usuarios: descarga **LANDELTA-Setup-0.13.3.exe**, ejecútalo y abre **LANDELTA** desde el escritorio o Inicio. No hace falta extraer carpetas ni instalar Python, .NET o herramientas de desarrollo. AC Studio se abre desde la misma aplicación; incluye el visor local y captura datos reales. No hay un acceso ni botón de demo.
+Para usuarios: descarga **LANDELTA-Setup-0.13.4.exe**, ejecútalo y abre **LANDELTA** desde el escritorio o Inicio. No hace falta extraer carpetas ni instalar Python, .NET o herramientas de desarrollo. AC Studio se abre desde la misma aplicación; incluye el visor local y captura datos reales. No hay un acceso ni botón de demo.
 
 Si aparece que LANDELTA sigue abierta, pulsa **Salir de LANDELTA** en su icono junto al reloj y continúa el instalador. La X solamente oculta la ventana. No se fuerza el cierre para evitar interrumpir una grabación. Las versiones portátiles viejas no se borran: usa el nuevo acceso LANDELTA, no el ejecutable que quedó en Descargas.
 
