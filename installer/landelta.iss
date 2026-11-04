@@ -1,5 +1,5 @@
 ; Per-user installation. Keep this AppId stable across future upgrades.
-#define AppVersion "0.13.4"
+#define AppVersion "0.13.5"
 [Setup]
 AppId={{B0498E99-D687-4838-A85F-372EF9BBCA40}
 AppName=LANDELTA
@@ -31,6 +31,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 spanish.SetupAppRunningError=LANDELTA sigue abierta, posiblemente junto al reloj.%n%nEn su icono, pulsa Salir de LANDELTA (la X solo la oculta). Después pulsa Aceptar para instalar la nueva versión.%n%nTus ajustes, historial y telemetría se conservan.
 
 [Files]
+Source: "..\assets\brands\*.png"; DestDir: "{app}\assets\brands"; Flags: ignoreversion
 Source: "..\LANDELTA.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\tools\ac-analyzer.html"; DestDir: "{app}\tools"; Flags: ignoreversion
 Source: "..\licenses\*.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion

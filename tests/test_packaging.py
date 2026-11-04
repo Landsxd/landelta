@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory(prefix='landelta-package-') as tmp:
     subprocess.run(['python3', str(root / 'tools/package-release.py'), '--binary', str(binary),
                     '--output', str(output)], check=True)
     with zipfile.ZipFile(output / 'LANDELTA-Windows-Beta.zip') as archive:
-        assert set(archive.namelist()) == {
+        assert set(archive.namelist()) == {'LANDELTA/'+p.relative_to(root).as_posix() for p in (root/'assets/brands').glob('*.png')} | {'LANDELTA/licenses/Car-logos.txt'} | {
             'LANDELTA/LANDELTA.exe', 'LANDELTA/tools/session-analysis.js', 'LANDELTA/tools/ac-analyzer.html',
             'LANDELTA/licenses/GCC-MinGW-notices.txt',
             'LANDELTA/licenses/MinGW-runtime-notices.txt', 'LANDELTA/vendor/JSON-LICENSE.txt'}
@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory(prefix='landelta-package-') as tmp:
 src = (root / 'src/main.cpp').read_text()
 assert 'Probar modo demo' not in src
 assert 'std::wstring(args).find(L"--demo")' not in src
-assert 'La versión 0.13.4 no se ha iniciado' in src
+assert 'La versión 0.13.5 no se ha iniciado' in src
 installer = (root / 'installer/landelta.iss').read_text()
 assert 'AppMutex=Local\\VortexACCOverlay' in installer
 assert 'PrivilegesRequired=lowest' in installer

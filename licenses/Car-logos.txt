@@ -1,0 +1,9 @@
+Manufacturer logos identify the car reported by ACC; they do not imply sponsorship or affiliation. All trademarks and logo rights belong to their respective owners.
+
+Images obtained without alteration from filippofilip95/car-logos-dataset, logos/thumb/, commit e334a4d2e8742108ba164c629dff5636576d3808.
+https://github.com/filippofilip95/car-logos-dataset
+The dataset README describes the dataset as MIT licensed and expressly reserves logos to their respective owners. Original image sources are documented in that repository's logos/data.json (carlogos.org).
+
+Bundled identification images: Alpine, Aston Martin, Audi, Bentley, BMW, Chevrolet, Ferrari, Ford, Ginetta, Honda, Jaguar, KTM, Lamborghini, Lexus, Maserati, McLaren, Mercedes-Benz, Nissan, Porsche.
+Model mapping: Kunos ACC Server Admin Handbook 1.10.2, IX.3 (PC); https://cdn.g-portal.com/ServerAdminHandbook_v8.pdf
+Unrecognized model IDs and cars awaiting entry metadata display no logo. An absent model is NOT Porsche ID 0.

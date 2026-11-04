@@ -31,7 +31,7 @@ inline std::string initial(const std::string& name){if(name.empty())return {};un
 inline std::string formatTimeMs(int ms){if(!timeValue(ms))return "--:--.---";char b[40];snprintf(b,sizeof b,"%d:%02d.%03d",ms/60000,(ms/1000)%60,ms%1000);return b;}
 struct Lap {int ms=0;std::array<int,3> splits{};bool invalid=false, valid=false, out=false,in=false;};
 inline Lap readLap(Reader& r){Lap l;l.ms=timeValue(r.i32());r.u16();r.u16();int count=r.u8();if(count>32)throw std::runtime_error("split count");for(int i=0;i<count;i++){int v=timeValue(r.i32());if(i<3)l.splits[i]=v;}l.invalid=r.u8()!=0;l.valid=r.u8()!=0;l.out=r.u8()!=0;l.in=r.u8()!=0;return l;}
-struct Car {int id=0,model=0,number=0,cup=0,driver=0,position=0,laps=0,location=0,speed=0,delta=0;float spline=0;std::string team,penaltyMessage;std::vector<std::string> drivers;Lap best,last,current;uint64_t seen=0,penaltyNoticeAt=0;
+struct Car {int id=0,model=-1,number=0,cup=0,driver=0,position=0,laps=0,location=0,speed=0,delta=0;float spline=0;std::string team,penaltyMessage;std::vector<std::string> drivers;Lap best,last,current;uint64_t seen=0,penaltyNoticeAt=0;
  std::string name()const{if(driver>=0 && driver<(int)drivers.size())return drivers[driver];if(!team.empty())return team;return "Auto #"+std::to_string(number?number:id);}
 };
 inline bool fresh(uint64_t at,uint64_t now,uint64_t limit=4000){return at&&now>=at&&now-at<limit;}

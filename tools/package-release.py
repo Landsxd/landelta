@@ -23,6 +23,7 @@ def main():
         shutil.copyfile(binary, exe)
     files = [ROOT / 'tools/ac-analyzer.html', ROOT / 'tools/session-analysis.js', *sorted((ROOT / 'licenses').glob('*.txt')),
              ROOT / 'vendor/JSON-LICENSE.txt']
+    files += sorted((ROOT / 'assets/brands').glob('*.png'))
     if not all(file.is_file() for file in files):
         raise SystemExit('Missing runtime file or required license.')
     archive = output / 'LANDELTA-Windows-Beta.zip'

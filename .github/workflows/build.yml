@@ -50,6 +50,8 @@ jobs:
         run: |
           $p = Start-Process ./LANDELTA.exe -ArgumentList '--ui-preview' -Wait -PassThru
           if ($p.ExitCode -ne 0 -or !(Test-Path dist/AC-Studio.png) -or !(Test-Path dist/ACC.png)) { throw 'UI render failed' }
+          $p = Start-Process ./LANDELTA.exe -ArgumentList '--standings-preview' -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or !(Test-Path dist/Standings.png) -or !(Test-Path dist/Standings-65.png)) { throw 'Standings render failed' }
       - name: Build installer
         shell: pwsh
         run: |
@@ -61,8 +63,8 @@ jobs:
         run: ./tools/test-installer.ps1
       - uses: actions/upload-artifact@v7
         with:
-          name: LANDELTA-Installer-0.13.4
-          path: dist/LANDELTA-Setup-0.13.4.exe
+          name: LANDELTA-Installer-0.13.5
+          path: dist/LANDELTA-Setup-0.13.5.exe
           if-no-files-found: error
           retention-days: 14
       - uses: actions/upload-artifact@v7
