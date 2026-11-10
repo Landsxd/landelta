@@ -31,6 +31,8 @@ struct Session {
  int best()const{int b=0;for(auto& l:laps)if(l.complete&&l.valid!=0&&!l.pit&&l.ms>0&&(!b||l.ms<b))b=l.ms;return b;}
 };
 inline bool timeOK(int ms){return ms>0&&ms<INT32_MAX;}
+inline std::array<int,3> observedSplits(int remoteLap,int localLap,int remoteMs,int localMs,int sector,const std::array<int,3>& splits){std::array<int,3> out{};if(remoteLap==localLap&&std::abs(int64_t(remoteMs)-localMs)<500)for(int i=0;i<std::clamp(sector,0,3);++i)out[i]=timeOK(splits[i])?splits[i]:0;return out;}
+inline bool restarted(const Sample& before,const Sample& after){return after.lap<before.lap||(after.lap==before.lap&&int64_t(after.ms)+1500<before.ms&&!(before.progress>.9&&after.progress<.1));}
 inline std::string safe(std::string s){for(auto& c:s)if(!std::isalnum((unsigned char)c)&&c!='-'&&c!='_')c='_';return s.substr(0,80);}
 inline std::string encode(const std::string& s){std::string o;const char* h="0123456789ABCDEF";for(unsigned char c:s){if(std::isalnum(c)||c=='_'||c=='-')o+=c;else{o+='%';o+=h[c>>4];o+=h[c&15];}}return o;}
 inline std::string decode(const std::string& s){std::string o;auto hex=[](char c)->int{if(c>='0'&&c<='9')return c-'0';if(c>='A'&&c<='F')return c-'A'+10;if(c>='a'&&c<='f')return c-'a'+10;return -1;};for(size_t i=0;i<s.size();++i){if(s[i]=='%'&&i+2<s.size()&&hex(s[i+1])>=0&&hex(s[i+2])>=0){o+=char(hex(s[i+1])*16+hex(s[i+2]));i+=2;}else o+=s[i];}return o;}

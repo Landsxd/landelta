@@ -28,11 +28,11 @@ void studioTick(uint64_t now){
   acstudio::Physics p{};bool physics=studioPhysics.read(p);race::Sample s;s.at=now;s.packet=physics?p.packet:shared.packet;s.lap=shared.laps+1;s.ms=shared.currentMs;s.last=shared.lastMs;s.best=shared.bestMs;s.progress=shared.spline;s.pit=shared.inPit||shared.inPitLane;s.valid=shared.valid?1:0;s.sector=shared.sector;s.lastSector=shared.lastSector;
   if(physics){s.gas=p.gas;s.brake=p.brake;s.speed=p.speed;s.steer=p.steer;s.gear=p.gear;s.rpm=p.rpm;}
   for(int i=0;i<std::min(60,std::max(0,shared.activeCars));++i)if(shared.carIds[i]==shared.player){s.x=shared.coordinates[i][0];s.z=shared.coordinates[i][2];break;}
-  auto c=live.cars.find(shared.player);if(c!=live.cars.end())s.splits=c->second.current.splits;
+  auto c=live.cars.find(shared.player);if(c!=live.cars.end())s.splits=race::observedSplits(c->second.laps,shared.laps,c->second.current.ms,shared.currentMs,shared.sector,c->second.current.splits);
   std::string track=live.track,car;acstudio::Static info{};if(studioStatic.data){memcpy(&info,studioStatic.data,sizeof info);car=acstudio::label(info.car);if(track.empty())track=acstudio::label(info.track);}
   // UDP reconnection is not a new local session. Preserve the same recording.
   auto key=std::to_string(gamePID)+"/"+std::to_string(shared.session)+"/"+std::to_string(shared.sessionIndex);
-  auto& r=studioRecords[1];if(!r.session.samples.empty()&&r.key==key&&s.lap<r.session.samples.back().lap)r.close();
+  auto& r=studioRecords[1];if(!r.session.samples.empty()&&r.key==key&&race::restarted(r.session.samples.back(),s))r.close();
   if(!track.empty())r.add(s,key,"ACC",track,car,dataDir/L"studio-sessions",wallMs());
  }else{studioRecords[1].online=false;studioPhysics.close();studioStatic.close();if(!gameRunning)studioRecords[1].close();}
  bool fresh=irClient.poll(now);if(fresh&&irClient.onTrack){auto& s=irClient.sample;studioRecords[2].add(s,irClient.identity+"/"+std::to_string(irClient.generation),"iRacing",irClient.state.track,irClient.car,dataDir/L"studio-sessions",wallMs());studioRecords[2].session.length=irClient.state.meters;}
