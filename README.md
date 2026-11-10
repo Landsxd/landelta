@@ -1,113 +1,89 @@
 <p align="center"><img src="Logo-LANDELTA.png" alt="LANDELTA" width="140"></p>
 
-# LANDELTA
+# LANDELTA · Race Studio
 
-**Tus tiempos. Tu ritmo. Tu próxima mejora.**
+**Tu sesión, tus tiempos y tu telemetría en una sola app.**
 
-Overlays de telemetría para **Assetto Corsa Competizione**, creados por **Lands** para Windows. Información legible, paneles compactos y fondos transparentes para conducir con los datos que necesitas.
+Beta **0.14.0** para Windows 10/11 x64. AC, ACC e integración **experimental de iRacing**. Aplicación nativa C++17, local, sin cuenta ni suscripción.
 
-**Beta 0.12.3 · Windows 10/11 x64 · C++17 · Sin cuenta ni suscripción**
+## Descargar
 
-> El proyecto está en desarrollo. Las pruebas de lógica usan transporte y ventanas simulados. No sustituyen una prueba de esta versión en ACC real bajo Windows.
+La rama `feature/ac-studio` genera **LANDELTA-Setup-0.14.0.exe** en el artefacto `LANDELTA-Installer-0.14.0` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Es un único instalador: no necesitas descargar código fuente, scripts ni archivos de demo.
 
-## Descargar y empezar
+La publicación histórica v0.12.3 no contiene Race Studio ni iRacing. Comprueba **0.14.0** en la ventana de la app.
 
-**Nuevo instalador 0.14.0 (AC + ACC):** la compilación de la rama `feature/ac-studio` genera **LANDELTA-Setup-0.14.0.exe** en el artefacto `LANDELTA-Installer-0.14.0` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Descarga el instalador, ejecútalo y abre LANDELTA desde el escritorio. No necesitas el código fuente ni archivos de demo. [Instalación, actualización y límites de validación](docs/INSTALAR.md). La versión del ejecutable debe indicar **0.14.0**. La publicación anterior enlazada abajo no incluye AC Studio.
+1. Sal de la copia anterior desde el icono junto al reloj; la X solo la deja en segundo plano.
+2. Ejecuta el instalador. Conserva ajustes, historial y grabaciones.
+3. Selecciona **AC, ACC o iRacing** arriba y entra en pista.
+4. En ACC, si falta preparar pilotos: cierra el juego una vez y usa **Ajustes → Reparar ACC**.
+5. Abre **Tu pantalla**, arrastra los paneles y pulsa **Guardar distribución**. Usa el juego en ventana sin bordes.
 
-**En desarrollo: AC Studio.** Grabación y análisis local para Assetto Corsa (2014), con comparación de vueltas y microsectores. Consulta [alcance, uso y limitaciones](docs/AC-STUDIO.md). Es experimental: no forma parte de la descarga estable 0.12.3 enlazada abajo y aún requiere validación en pista.
+## Dentro de la app
 
-Abre la [beta v0.12.3](https://github.com/Landsxd/landelta/releases/tag/v0.12.3) y descarga **LANDELTA-Windows-Beta.zip**. El ZIP automático **Source code** contiene el código; para jugar necesitas la descarga de Windows.
-
-1. Extrae el ZIP en una carpeta fija y abre `LANDELTA.exe`.
-2. La primera vez, mantén ACC cerrado para preparar su conexión local. Si no encuentra Documentos, usa **Conexión → Elegir carpeta de ACC**.
-3. Abre ACC en **ventana sin bordes** y entra en pista.
-4. Activa los paneles que quieras, ajusta su tamaño y posición y pulsa **Bloquear para conducir**.
-5. Para iniciar con Windows, usa **Inicio → Activar**. La app espera junto al reloj y muestra los overlays al detectar una sesión.
-
-¿Vienes de Vortex? Sal de la copia anterior desde su icono de bandeja antes de abrir LANDELTA. Los ajustes y el historial se conservan. Si usabas inicio automático, vuelve a pulsar **Inicio → Activar** para actualizar la ubicación del EXE.
-
-## Qué puedes ver
-
-| Panel | Datos |
+| Área | Contenido |
 | --- | --- |
-| **CLASI** | Clasificación, pilotos, mejores vueltas y avisos de penalización. |
-| **REL** | Autos próximos delante y detrás en pista, incluidos doblados. |
-| **Vuelta / sectores** | Vuelta actual y S1/S2/S3 en vertical, con minutos y milésimas. |
-| **Pedales** | Barras de acelerador y freno, sin porcentajes. |
-| **Delta** | Diferencia por punto de pista frente a tu mejor vuelta limpia observada; referencia de ACC mientras se aprende. |
-| **Últimos sectores** | Las dos últimas vueltas frente a la mejor limpia anterior. |
-| **Ritmo / alcance** | Ritmo de rivales y estimación de alcance a partir de vueltas limpias observadas. |
-| **Historial** | Circuitos, sesiones y vueltas guardados en una pestaña de la app. |
+| Sesión | Pista, coche, trazado registrado al conducir, vuelta actual, última y mejor registrada; tabla de vueltas y sectores; exportación PNG. |
+| Telemetría | Gráficas de velocidad, freno, acelerador y volante por distancia; cursor de valores; comparación con otra vuelta; sectores o 10 microsectores. |
+| Mis sesiones | Sesiones guardadas por juego y fecha; abre datos anteriores sin navegar por carpetas. |
+| Tu pantalla | Miniatura del escritorio virtual, movimiento de overlays y distribución independiente por juego. |
+| Ajustes | Conexión, captura AC, inicio con Windows, visibilidad, fondo y filas de clasificación. |
 
-Los paneles son independientes. Puedes moverlos, cambiar tamaño y opacidad, y apagar los que no necesites. Los espacios sin información permanecen transparentes.
+**Exportar sesión ZIP** incluye las muestras CSV originales, resumen de vueltas CSV y metadatos JSON. Los archivos siguen guardándose localmente, pero su acceso normal se hace desde LANDELTA.
 
-## Delta y conexión
+## Overlays
 
-**Δ MEJOR** necesita una vuelta limpia completa observada desde su inicio con la app abierta. Compara el tiempo al pasar por el mismo punto del circuito, interpolando entre muestras. Una vuelta iniciada antes de abrir la app no sirve como referencia completa. Verde y negativo: ganas tiempo; rojo y positivo: lo pierdes.
+| Juego | Paneles de esta beta |
+| --- | --- |
+| ACC | Clasificación con marcas, relativos, pedales, delta y últimos sectores. |
+| AC | Pedales y delta local cuando existe referencia suficiente. |
+| iRacing (experimental) | Clasificación, relativos, pedales y delta del SDK cuando está disponible. |
 
-**Δ ACC** usa la referencia que envía el juego mientras no existe una local. **SIN REF.** indica ausencia de referencia, no una diferencia de cero. Las vueltas inválidas y de boxes no crean una referencia; cambiar sesión, circuito o auto la reinicia.
+Se retiran del overlay **Ritmo / alcance** y **Vuelta / sectores**. Los tiempos y sectores se consultan dentro de la app. Los gaps marcados con `~` son estimaciones, no intervalos oficiales.
 
-Tu auto utiliza memoria compartida local. Los demás pilotos llegan mediante el protocolo de broadcasting de ACC, tanto en sesiones offline como online cuando el juego los transmite. Al pasar de clasificación a carrera, las dos fuentes pueden cambiar en momentos distintos: tus tiempos continúan y LANDELTA espera la parrilla de la nueva sesión, descartando autos anteriores.
+## Precisión y límites
 
-Si faltan pilotos en una conexión ya configurada, prueba **Conexión → Reconectar**; conserva los tiempos de tu auto. Si indica que falta preparar la configuración, cierra ACC, pulsa **Reparar conexión de pilotos** y abre ACC de nuevo.
+- ACC/iRacing: captura de hasta **10 muestras nuevas/s** en esta beta. No equivale a registrar todos los ticks del simulador; los tiempos conservan los milisegundos que informa el juego.
+- AC conserva el CSV de su grabador existente; el directo es una vista reducida y al abrir la sesión se cargan las muestras originales.
+- Los microsectores son estimaciones interpoladas por distancia. Los huecos o cruces por meta sin evidencia suficiente quedan vacíos.
+- Volante: unidades nativas en AC/ACC; radianes en iRacing. Pedales: entrada aplicada, no fuerza física del pie.
+- Los datos no disponibles permanecen desconocidos. No se deduce validez de iRacing a partir de incidentes ni se inventan sectores oficiales.
+- El trazado necesita coordenadas y se construye al conducir; no es un mapa precargado.
+- El historial antiguo de ACC contiene tiempos, pero no puede recuperar telemetría que nunca se grabó.
+- [Cambios y límites completos de 0.14.0](docs/RELEASE-0.14.0.md).
 
-**Corrección 0.12.3:** el estado de menú/pausa de la memoria no bloquea la conexión de pilotos. LANDELTA reabre lecturas detenidas y envía la baja UDP con su identificador. Al actualizar desde una versión anterior, cierra también ACC una vez para empezar sin conexiones antiguas. Si tienes inicio automático, desactívalo y vuelve a activarlo desde la nueva copia.
+**Validación:** pruebas de lógica, compilación, capturas nativas y comprobación del instalador. Falta validar esta beta conduciendo en AC/ACC/iRacing, especialmente práctica → clasificación → carrera, pausa/reanudación y varios monitores. No se presenta como una versión ya validada en pista.
 
-Los relativos, gaps de carrera y predicciones marcados con `~` son estimaciones. `PEN` confirma una sanción del jugador; `!` es un aviso recibido y no confirma una sanción pendiente de otro piloto.
+## Ventana y atajos
 
-## Atajos
+La ventana se puede maximizar y redimensionar. Minimizar la deja en la barra de tareas; cerrar con X la deja junto al reloj. Para cerrarla por completo usa **Salir de LANDELTA**.
 
 | Atajo | Acción |
 | --- | --- |
-| `Ctrl + Alt + F10` | Bloquear / desbloquear paneles. |
-| `Ctrl + Alt + F11` | Mostrar / ocultar overlays. |
-| `Ctrl + Alt + F12` | Abrir el control. |
+| Ctrl + Alt + F10 | Bloquear / desbloquear overlays. |
+| Ctrl + Alt + F11 | Mostrar / ocultar overlays. |
+| Ctrl + Alt + F12 | Abrir LANDELTA. |
 
-La ventana principal permite **maximizar y redimensionar desde los bordes**, y recuerda su tamaño. Minimizar la mantiene en la **barra de tareas**. Cerrar con **X** deja la app en segundo plano. Para terminarla, usa el icono junto al reloj → **Salir de LANDELTA**. **Mostrar overlays al entrar en sesión** viene activado; una sesión nueva vuelve a mostrar los paneles habilitados.
+La rueda sobre el delta desbloqueado cambia su tamaño. Los ajustes e historial se conservan al actualizar.
 
-## Reportar un problema
+## Reportar errores
 
-Abre un **Issue** con la plantilla de bug. Indica versión, circuito, modalidad, si era online u offline, pasos y qué esperabas ver. Puedes generar el diagnóstico desde **Conexión → Diagnóstico**; revisa y elimina tu nombre de usuario o rutas personales antes de adjuntarlo.
+Indica versión, juego, circuito, modalidad, pasos y resultado esperado. Para ACC: **Ajustes → Diagnóstico**. Revisa rutas personales antes de compartirlo. No publiques contraseñas ni `broadcasting.json` completo.
 
-No hace falta publicar tu `broadcasting.json`, contraseñas ni tu historial completo. La app guarda los datos localmente y no envía tu telemetría a internet.
+## Compilar
 
-## Compilar y contribuir
-
-Instala [MSYS2](https://www.msys2.org/) y abre su terminal **UCRT64**:
+Con [MSYS2](https://www.msys2.org/), terminal UCRT64:
 
 ```bash
 pacman -S --needed mingw-w64-ucrt-x86_64-gcc
 MSYS2_ARG_CONV_EXCL='*' cmd.exe /c build-windows.bat
 ```
 
-El resultado es `LANDELTA.exe` en la raíz del proyecto. El ejecutable distribuido no requiere Python ni .NET.
-
-- [Guía de contribución](CONTRIBUTING.md)
-- [Instrucciones completas de uso](LEEME.txt)
-- [Cambios de la beta 0.12](CAMBIOS-0.12.txt)
-- [Qué se ha validado y sus límites](VALIDACION.txt)
-- [Cómo publicar la beta](docs/PUBLISHING.md)
-
-El flujo de GitHub Actions incluye pruebas de lógica e integración simulada en Linux y compilación en Windows. La [primera publicación de la beta](https://github.com/Landsxd/landelta/actions/runs/37895981404) superó ambos trabajos y la verificación de sus descargas. Compilar correctamente no certifica por sí solo una carrera real.
+Pruebas portables: `python3 tools/run-tests.py`. El ejecutable no requiere Python ni .NET. GitHub Actions compila y empaqueta el instalador de Windows.
 
 ## Apoya LANDELTA 🏁
 
-Si LANDELTA te acompaña en pista y quieres apoyar su desarrollo, puedes hacer una donación voluntaria. Tu apoyo ayuda a dedicar más tiempo a corregir errores, mejorar la conexión con ACC y crear nuevas funciones.
+### [💚 Donación voluntaria por PayPal](https://paypal.me/landeroslal)
 
-### [💚 Apoyar LANDELTA por PayPal](https://paypal.me/landeroslal)
+Donar no es necesario para descargar ni usar LANDELTA.
 
-Donar es opcional y no es necesario para descargar ni usar la app. Gracias por formar parte del proyecto y ayudar a que siga mejorando vuelta a vuelta.
-
-## Créditos
-
-Desarrollo: **Lands**. Nombre anterior: Vortex ACC Overlay.
-
-Las dependencias conservan sus avisos en [`vendor/JSON-LICENSE.txt`](vendor/JSON-LICENSE.txt) y [`licenses/`](licenses/). Proyecto independiente, sin afiliación con Kunos, Assetto Corsa Competizione, RaceLab ni SRO.
-
-### Delta e imágenes del historial
-
-En **Paneles**, usa **Delta − / +** (50–250%) o la rueda sobre el delta desbloqueado. El tamaño general también se aplica. Activa **Fuera de sesión** para ver los paneles sin modo demo; el delta conserva el último dato como **Δ FIN**. F11 sigue permitiendo ocultarlos.
-
-En vueltas inválidas, el delta sigue comparando: mejora amarilla, pérdida roja. La referencia propia siempre procede de una vuelta limpia.
-
-En **Historial → Circuito → Sesión → Exportar PNG**, elige dónde guardar todas las vueltas y sectores. Las sesiones de más de 40 vueltas se dividen en imágenes numeradas.
+Desarrollo: **Lands**. Nombre anterior: Vortex ACC Overlay. Proyecto independiente, sin afiliación con Kunos, iRacing, RaceLab ni SRO. Avisos de dependencias y marcas en [licenses](licenses/) y [vendor/JSON-LICENSE.txt](vendor/JSON-LICENSE.txt).

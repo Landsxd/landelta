@@ -1,11 +1,11 @@
 #include "session_zip.hpp"
 // Native, offline Race Studio. Uses exactly the same renderer in previews and EXE.
-int layoutDrag=-1;float dragDX=0,dragDY=0;bool layoutDirty=false;
+int layoutDrag=-1;float dragDX=0,dragDY=0;bool layoutDirty=false,studioPreview=false;
 std::array<int,PanelCount> draftX{},draftY{};race::ScreenTransform screenMap;
 std::vector<std::pair<RectF,int>> layoutHits;
 const wchar_t* panelName(int i){const wchar_t* n[]={L"Clasificación",L"Relativos",L"",L"Pedales",L"Delta",L"Últimos sectores",L""};return n[i];}
-void beginLayout(){for(int i=0;i<PanelCount;++i){draftX[i]=cfg.x[i];draftY[i]=cfg.y[i];}layoutDirty=false;layoutDrag=-1;}
-void studioSwitch(int mode){cfg.gameMode=mode;reviewing=false;selectedLap=compareLap=-1;lapOffset=0;beginLayout();refreshCatalog();}
+void beginLayout(){int left=studioPreview?0:GetSystemMetrics(SM_XVIRTUALSCREEN),top=studioPreview?0:GetSystemMetrics(SM_YVIRTUALSCREEN),width=studioPreview?1920:GetSystemMetrics(SM_CXVIRTUALSCREEN),height=studioPreview?1080:GetSystemMetrics(SM_CYVIRTUALSCREEN);width=std::max(1,width);height=std::max(1,height);for(int i=0;i<PanelCount;++i){int w=int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),h=int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1));draftX[i]=std::clamp(cfg.x[i],left,left+std::max(0,width-w));draftY[i]=std::clamp(cfg.y[i],top,top+std::max(0,height-h));}layoutDirty=false;layoutDrag=-1;}
+void studioSwitch(int mode){cfg.saveProfile();cfg.gameMode=mode;cfg.restoreProfile();reviewing=false;selectedLap=compareLap=-1;lapOffset=0;beginLayout();refreshCatalog();}
 void label(Graphics& g,const std::wstring& s,float x,float y,float w=250,Color c=MUTED){text(g,s,x,y,w,22,12,c,FontStyleBold);}
 void metric(Graphics& g,const std::wstring& title,const std::wstring& value,float x,float y,float width,Color color=FG){fill(g,x,y,width,91,CARD);label(g,title,x+16,y+12,width-32);text(g,value,x+14,y+35,width-28,44,30,color,FontStyleBold);}
 std::wstring stateLabel(const race::Lap& l){if(!l.complete)return L"En curso / parcial";if(l.pit)return L"Boxes";if(l.partial)return L"Captura parcial";return l.valid==0?L"Inválida":(l.valid==1?L"Válida":L"Validez desconocida");}
@@ -19,7 +19,7 @@ void trackMap(Graphics& g,const race::Session& s,RectF r){
  if(!s.samples.empty()&&std::isfinite(s.samples.back().x)&&std::isfinite(s.samples.back().z)){auto p=point(s.samples.back());SolidBrush b(GREEN);g.FillEllipse(&b,p.X-5,p.Y-5,10.f,10.f);}
 }
 void lapTable(Graphics& g,race::Session& s,float y,int rows){
- label(g,L"VUELTAS DE LA SESIÓN",228,y,280);button(g,L"‹",1072,y-2,38,28,221);button(g,L"›",1118,y-2,38,28,222);y+=36;
+ label(g,L"VUELTAS DE LA SESIÓN",228,y,280);button(g,L"Exportar PNG",900,y-2,158,28,228);button(g,L"‹",1072,y-2,38,28,221);button(g,L"›",1118,y-2,38,28,222);y+=36;
  const float x[]={240,304,468,634,800,958};const wchar_t* titles[]={L"VUELTA",L"TIEMPO",L"S1",L"S2",L"S3",L"ESTADO"};for(int i=0;i<6;++i)label(g,titles[i],x[i],y,155);
  lapOffset=std::clamp(lapOffset,0,std::max(0,int(s.laps.size())-rows));int first=lapOffset;
  if(!reviewing&&selectedLap<0)first=std::max(0,int(s.laps.size())-rows);
@@ -37,15 +37,16 @@ double channel(const race::Sample& p,int c){return c==0?p.speed:(c==1?p.brake*10
 void renderTelemetry(Graphics& g){auto& s=currentSession();if(selectedLap<0&&!s.laps.empty())selectedLap=s.laps.back().number;
  std::wstring selection=L"Vuelta "+(selectedLap<0?std::wstring(L"—"):std::to_wstring(selectedLap));button(g,L"‹",228,153,36,34,223);text(g,selection,276,153,145,34,20,FG,FontStyleBold);button(g,L"›",424,153,36,34,224);button(g,compareLap<0?L"Comparar mejor":L"Comparando V"+std::to_wstring(compareLap),476,153,192,34,225,false,compareLap>=0);
  button(g,sectorMode?L"10 microsectores":L"Sectores oficiales",686,153,214,34,226,false,sectorMode);button(g,L"Exportar sesión ZIP",916,153,240,34,227);
+ std::vector<const race::Sample*> traces[2];for(const auto& p:s.samples){if(p.lap==compareLap)traces[0].push_back(&p);if(p.lap==selectedLap)traces[1].push_back(&p);}
  const wchar_t* names[]={L"VELOCIDAD · km/h",L"FRENO · % aplicado",L"GAS · % aplicado",L"VOLANTE"};Color colors[]={BLUE,RED,GREEN,GOLD};
  const float gx=410,gw=728;const float tops[]={209,316,423,530};
  for(int c=0;c<4;++c){float y=tops[c];fill(g,228,y,928,98,CARD);label(g,c==3?std::wstring(names[c])+L" · "+wide(s.steerUnit):names[c],242,y+10,165,colors[c]);
   double low=0,high=c==0?350:100;if(c==3){low=-1;high=1;for(const auto& p:s.samples)if((p.lap==selectedLap||p.lap==compareLap)&&std::isfinite(p.steer)){low=std::min(low,p.steer);high=std::max(high,p.steer);}}
   for(int j=0;j<3;++j)line(g,gx,y+12+j*34,gw,EDGE);
-  for(int pass=0;pass<2;++pass){int lap=pass?selectedLap:compareLap;if(lap<0)continue;Pen pen(pass?colors[c]:Color(255,105,116,120),pass?2.f:1.5f);bool have=false;race::Sample previous;size_t stride=std::max(size_t(1),s.samples.size()/12000);
-   for(size_t i=0;i<s.samples.size();i+=stride){auto& p=s.samples[i];double value=channel(p,c);if(p.lap!=lap||!std::isfinite(value)||!std::isfinite(p.progress)){have=false;continue;}if(have&&p.progress>=previous.progress&&p.progress-previous.progress<.03&&p.at>=previous.at&&p.at-previous.at<500){auto py=[&](double v){return y+84-float(std::clamp((v-low)/(high-low),0.,1.)*70);};g.DrawLine(&pen,gx+float(previous.progress)*gw,py(channel(previous,c)),gx+float(p.progress)*gw,py(value));}previous=p;have=true;}
+  for(int pass=0;pass<2;++pass){int lap=pass?selectedLap:compareLap;if(lap<0)continue;Pen pen(pass?colors[c]:Color(255,105,116,120),pass?2.f:1.5f);bool have=false;race::Sample previous;
+   for(const auto* sample:traces[pass]){const auto& p=*sample;double value=channel(p,c);if(p.lap!=lap||!std::isfinite(value)||!std::isfinite(p.progress)){have=false;continue;}if(have&&p.progress>=previous.progress&&p.progress-previous.progress<.03&&p.at>=previous.at&&p.at-previous.at<500){auto py=[&](double v){return y+84-float(std::clamp((v-low)/(high-low),0.,1.)*70);};g.DrawLine(&pen,gx+float(previous.progress)*gw,py(channel(previous,c)),gx+float(p.progress)*gw,py(value));}previous=p;have=true;}
   }
-  const race::Sample* nearest=nullptr;if(graphCursor>=0){for(const auto& p:s.samples)if(p.lap==selectedLap&&(!nearest||std::abs(p.progress-graphCursor)<std::abs(nearest->progress-graphCursor)))nearest=&p;Pen cursor(FG,1);float cx=gx+float(graphCursor)*gw;g.DrawLine(&cursor,cx,y+8,cx,y+89);}
+  const race::Sample* nearest=nullptr;if(graphCursor>=0){for(const auto* p:traces[1])if(!nearest||std::abs(p->progress-graphCursor)<std::abs(nearest->progress-graphCursor))nearest=p;Pen cursor(FG,1);float cx=gx+float(graphCursor)*gw;g.DrawLine(&cursor,cx,y+8,cx,y+89);}
   if(nearest)text(g,num(channel(*nearest,c),c==3?3:1),242,y+40,160,37,26,colors[c],FontStyleBold);else text(g,L"—",242,y+40,160,37,26,MUTED);
  }
  label(g,L"DISTANCIA DE VUELTA  ·  0 %",410,630,380);text(g,L"100 %",1078,630,60,22,12,MUTED,FontStyleBold,StringAlignmentFar);
@@ -56,7 +57,7 @@ void renderTelemetry(Graphics& g){auto& s=currentSession();if(selectedLap<0&&!s.
 }
 void renderLayout(Graphics& g){
  label(g,L"TU PANTALLA",228,153,300,GREEN);text(g,L"Arrastra los paneles. Los cambios se aplican al guardar.",228,181,928,28,18,FG);
- screenMap={double(GetSystemMetrics(SM_XVIRTUALSCREEN)),double(GetSystemMetrics(SM_YVIRTUALSCREEN)),double(GetSystemMetrics(SM_CXVIRTUALSCREEN)),double(GetSystemMetrics(SM_CYVIRTUALSCREEN)),228,224,928,365};if(screenMap.width<1||screenMap.height<1){screenMap.width=1920;screenMap.height=1080;}
+ screenMap={double(GetSystemMetrics(SM_XVIRTUALSCREEN)),double(GetSystemMetrics(SM_YVIRTUALSCREEN)),double(GetSystemMetrics(SM_CXVIRTUALSCREEN)),double(GetSystemMetrics(SM_CYVIRTUALSCREEN)),228,224,928,365};if(studioPreview)screenMap={0,0,1920,1080,228,224,928,365};if(screenMap.width<1||screenMap.height<1){screenMap.width=1920;screenMap.height=1080;}
  auto origin=screenMap.toMini(screenMap.left,screenMap.top);double k=screenMap.scale();fill(g,228,224,928,365,Color(255,8,12,10));fill(g,float(origin.first),float(origin.second),float(screenMap.width*k),float(screenMap.height*k),Color(255,19,27,23));
  Pen grid(Color(255,32,44,35),1);for(int j=1;j<12;++j){float x=float(origin.first+screenMap.width*k*j/12);g.DrawLine(&grid,x,float(origin.second),x,float(origin.second+screenMap.height*k));}for(int j=1;j<7;++j){float y=float(origin.second+screenMap.height*k*j/7);g.DrawLine(&grid,float(origin.first),y,float(origin.first+screenMap.width*k),y);}
  layoutHits.clear();for(int i=0;i<PanelCount;++i){if(!panelAllowed(i)||!cfg.visible[i])continue;auto p=screenMap.toMini(draftX[i],draftY[i]);float w=float(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)*k),h=float(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1)*k);RectF r(float(p.first),float(p.second),w,h);fill(g,r.X,r.Y,r.Width,r.Height,Color(255,42,65,30));Pen border(GREEN,1.5);g.DrawRectangle(&border,r);text(g,panelName(i),r.X+4,r.Y+2,r.Width-8,std::min(28.f,r.Height),std::min(14.f,std::max(9.f,r.Height*.4f)),FG,FontStyleBold);layoutHits.emplace_back(r,i);}
@@ -82,7 +83,7 @@ void renderControl(Graphics& g){
  g.Clear(BG);hits.clear();fill(g,0,0,200,780,Color(255,16,22,18));fill(g,18,25,4,35,GREEN);text(g,L"LANDELTA",32,20,161,35,24,FG,FontStyleBold);label(g,L"RACE STUDIO / 0.14.0",32,58,160,GREEN);
  const wchar_t* nav[]={L"01   Sesión",L"02   Telemetría",L"03   Tu pantalla",L"04   Ajustes"};for(int i=0;i<4;++i){button(g,nav[i],16,122+i*51,168,41,200+i,studioPage==i,studioPage==i);}
  label(g,L"MIS SESIONES",20,354,160);button(g,L"Actualizar",20,383,160,30,210);int shown=0;
- for(int i=sessionOffset;i<int(catalog.size())&&shown<5;++i,++shown){float y=429+shown*49;button(g,wide(catalog[i].track),20,y,160,42,4000+i,false,reviewing&&reviewed.id==catalog[i].id);}
+ for(int i=sessionOffset;i<int(catalog.size())&&shown<5;++i,++shown){float y=429+shown*49;button(g,L"",20,y,160,42,4000+i,false,reviewing&&reviewed.id==catalog[i].id);text(g,wide(catalog[i].track),27,y+2,146,20,12,FG,FontStyleBold);text(g,catalog[i].started?historyDate(catalog[i].started):L"Fecha desconocida",27,y+22,146,18,10,MUTED);}
  if(catalog.empty())text(g,L"Aún sin sesiones",20,434,160,30,13,MUTED);
  button(g,L"‹",20,687,70,29,211);button(g,L"›",110,687,70,29,212);label(g,L"LOCAL · SIN NUBE",20,740,160);
  text(g,studioPage==2?L"Diseña tu cockpit":(studioPage==3?L"Ajustes":L"Tu centro de carrera"),228,23,390,38,29,FG,FontStyleBold);
@@ -100,9 +101,10 @@ bool studioAction(int id){
  if(id>=240&&id<=242){studioSwitch(id-240);return true;}
  switch(id){case 210:refreshCatalog();break;case 211:sessionOffset=std::max(0,sessionOffset-5);break;case 212:if(sessionOffset+5<int(catalog.size()))sessionOffset+=5;break;case 213:reviewing=false;selectedLap=compareLap=-1;break;case 221:lapOffset=std::max(0,lapOffset-5);selectedLap=0;break;case 222:lapOffset+=5;selectedLap=0;break;
  case 223:case 224:{auto& l=currentSession().laps;for(size_t i=0;i<l.size();++i)if(l[i].number==selectedLap){int next=std::clamp(int(i)+(id==223?-1:1),0,int(l.size())-1);selectedLap=l[next].number;break;}break;}
- case 225:{if(compareLap>=0){compareLap=-1;break;}int best=0;for(auto& l:currentSession().laps)if(l.complete&&!l.pit&&l.valid!=0&&l.number!=selectedLap&&l.ms&&(!best||l.ms<best)){best=l.ms;compareLap=l.number;}if(compareLap<0)studioNotice=L"Todavía no hay otra vuelta completa para comparar";break;}
+ case 225:{if(compareLap>=0){compareLap=-1;break;}int best=0;for(auto& l:currentSession().laps)if(l.complete&&!l.partial&&!l.pit&&l.valid!=0&&l.number!=selectedLap&&l.ms&&(!best||l.ms<best)){best=l.ms;compareLap=l.number;}if(compareLap<0)studioNotice=L"Todavía no hay otra vuelta completa para comparar";break;}
+ case 228:{auto& s=currentSession();acc::SessionRecord r;r.track=s.track;r.driver=s.car;r.started=s.started;for(auto& l:s.laps){acc::RecordedLap a;a.number=l.number;a.complete=l.complete&&!l.partial;a.pit=l.pit;a.timing.ms=l.ms;a.timing.splits=l.sectors;a.timing.valid=l.valid==1;a.timing.invalid=l.valid==0;r.laps.push_back(a);}exportHistoryImage(&r);break;}
  case 226:sectorMode=!sectorMode;break;case 227:exportStudioCSV();break;case 230:beginLayout();break;case 231:for(int i=0;i<PanelCount;++i){draftX[i]=int(screenMap.left)+Config{}.x[i];draftY[i]=int(screenMap.top)+Config{}.y[i];}layoutDirty=true;break;
- case 232:for(int i=0;i<PanelCount;++i){cfg.x[i]=draftX[i];cfg.y[i]=draftY[i];}locked=true;layoutDirty=false;studioNotice=L"Distribución aplicada y paneles bloqueados";break;default:return false;}return true;
+ case 232:for(int i=0;i<PanelCount;++i){auto mini=screenMap.toMini(draftX[i],draftY[i]);auto pos=screenMap.toDesktop(mini.first,mini.second,int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1)));cfg.x[i]=draftX[i]=pos.first;cfg.y[i]=draftY[i]=pos.second;}locked=true;layoutDirty=false;studioNotice=L"Distribución aplicada y paneles bloqueados";break;default:return false;}return true;
 }
 bool studioPointer(HWND h,UINT msg,float x,float y){
  if(msg==WM_MOUSEMOVE&&studioPage==1){graphCursor=x>=410&&x<=1138&&y>=209&&y<=628?(x-410)/728.:-1;InvalidateRect(h,nullptr,FALSE);}

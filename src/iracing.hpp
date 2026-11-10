@@ -41,6 +41,7 @@ inline std::map<int,std::map<std::string,std::string>> drivers(const std::string
  }return out;
 }
 inline int milliseconds(double seconds){return std::isfinite(seconds)&&seconds>0&&seconds<INT32_MAX/1000.?int(seconds*1000+.5):0;}
+inline std::string sessionType(const std::string& yaml,int number){std::istringstream f(yaml);std::string line;bool selected=false;while(std::getline(f,line)){auto s=trim(line);if(s.rfind("- ",0)==0)s=s.substr(2);if(s.rfind("SessionNum:",0)==0){try{selected=std::stoi(trim(s.substr(11)))==number;}catch(...){selected=false;}}else if(selected&&s.rfind("SessionType:",0)==0)return trim(s.substr(12));}return {};}
 #ifdef _WIN32
 struct Client {
  HANDLE mapping=nullptr;const uint8_t* view=nullptr;size_t size=0;Packet packet;acc::State state;race::Sample sample;
@@ -49,7 +50,7 @@ struct Client {
  ~Client(){close();}
  bool poll(uint64_t now){
   if(!view){if(now-lastOpen<1000)return false;lastOpen=now;mapping=OpenFileMappingW(FILE_MAP_READ,FALSE,L"Local\\IRSDKMemMapFileName");if(!mapping)return false;view=(const uint8_t*)MapViewOfFile(mapping,FILE_MAP_READ,0,0,0);MEMORY_BASIC_INFORMATION info{};if(!view||!VirtualQuery(view,&info,sizeof info)){close();return false;}size=info.RegionSize;}
-  if(!packet.read(view,size)){if(lastNew&&now-lastNew>3000)close();return false;}
+  if(!packet.read(view,size)){if(now-(lastNew?lastNew:lastOpen)>3000)close();return false;}
   if(packet.tick==previousTick){if(lastNew&&now-lastNew>3000){error="Telemetría detenida; reconectando";close();}return false;}
   bool rewind=previousTick>=0&&packet.tick<previousTick;previousTick=packet.tick;lastNew=now;connected=true;error.clear();
   int sn=int(packet.get("SessionNum",0,-1));auto key=field(packet.yaml,"SessionID")+"/"+field(packet.yaml,"SubSessionID")+"/"+std::to_string(sn)+"/"+field(packet.yaml,"TrackName");
@@ -60,7 +61,7 @@ struct Client {
   state.focus=int(packet.get("PlayerCarIdx",0,-1));state.replay=packet.get("IsReplayPlaying",0,0)!=0;
   onTrack=packet.get("IsOnTrack",0,0)!=0&&!state.replay;
   int phase=int(packet.get("SessionState",0,0));state.phase=phase>=4?5:phase;
-  auto sessionType=field(packet.yaml.substr(packet.yaml.find("SessionNum: "+std::to_string(sn))==std::string::npos?0:packet.yaml.find("SessionNum: "+std::to_string(sn))),"SessionType");state.type=sessionType=="Race"?10:(sessionType.find("Qual")!=std::string::npos?4:0);
+  auto type=sessionType(packet.yaml,sn);state.type=type=="Race"?10:(type.find("Qual")!=std::string::npos?4:0);
   state.elapsed=float(packet.get("SessionTime",0,0)*1000);state.end=state.elapsed+float(packet.get("SessionTimeRemain",0,0)*1000);
   auto metadata=drivers(packet.yaml);for(auto& item:metadata){int id=item.first;double progress=packet.get("CarIdxLapDistPct",id);if(!std::isfinite(progress)||progress<0||progress>1)continue;
    auto& c=state.cars[id];c.id=id;c.team=item.second["UserName"];try{c.number=std::stoi(item.second["CarNumber"]);}catch(...){c.number=0;}c.position=int(packet.get("CarIdxPosition",id,0));c.spline=float(progress);c.laps=std::max(0,int(packet.get("CarIdxLapCompleted",id,0)));c.location=packet.get("CarIdxOnPitRoad",id,0)?2:1;c.last.ms=milliseconds(packet.get("CarIdxLastLapTime",id));c.best.ms=milliseconds(packet.get("CarIdxBestLapTime",id));c.seen=now;state.passages[id].add(c,now);

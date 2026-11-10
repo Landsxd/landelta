@@ -15,7 +15,7 @@
 // Shared presentation model. Missing telemetry stays missing; never synthesize laps.
 namespace race {
 struct Sample {
- uint64_t at=0; int packet=-1,lap=0,ms=0,last=0,best=0,sector=-1,lastSector=0,valid=-1;
+ uint64_t at=0; int packet=-1,lap=0,ms=0,last=0,best=0,sector=-1,lastSector=0,valid=-1,stint=0;
  double progress=NAN,speed=NAN,gas=NAN,brake=NAN,steer=NAN,x=NAN,z=NAN,delta=NAN;
  bool pit=false; int gear=0,rpm=0; std::array<int,3> splits{};
 };
@@ -48,13 +48,13 @@ inline void analyze(Session& s){
   for(size_t i=start;i<end;++i){auto& p=s.samples[i];l.pit|=p.pit;if(p.valid==0)l.valid=0;else if(p.valid<0&&l.valid!=0)l.valid=-1;
    for(int k=0;k<3;++k)if(timeOK(p.splits[k]))l.sectors[k]=p.splits[k];
    // Only latch a sector on an observed crossing, not repeatedly inside next sector.
-   if(prevSector>=0&&p.sector==prevSector+1&&p.sector<3&&timeOK(p.lastSector))l.sectors[prevSector]=p.lastSector;
+   if(prevSector>=0&&p.sector==prevSector+1&&p.sector<3&&timeOK(p.lastSector)&&i>start&&p.lastSector!=s.samples[i-1].lastSector)l.sectors[prevSector]=p.lastSector;
    prevSector=p.sector;
    if(i==start)continue;auto& a=s.samples[i-1];if(p.at<a.at||p.at-a.at>500){++s.gaps;continue;}
    if(p.progress<=a.progress||p.ms<a.ms)continue;
    for(int k=1;k<10;++k){double q=k/10.;if(a.progress<=q&&p.progress>=q)crossing[k]=a.ms+(p.ms-a.ms)*(q-a.progress)/(p.progress-a.progress);}
   }
-  if(end<s.samples.size()&&s.samples[end].lap==l.number+1){
+  if(end<s.samples.size()&&s.samples[end].lap==l.number+1&&s.samples[end].stint==s.samples[start].stint){
    // Official last-lap time can arrive a few packets after the lap counter.
    for(size_t i=end;i<s.samples.size()&&s.samples[i].lap==l.number+1&&s.samples[i].ms<3000;++i){if(timeOK(s.samples[i].last)&&s.samples[i].last>=s.samples[end-1].ms-1000){l.ms=s.samples[i].last;l.complete=true;break;}}
    const auto& a=s.samples[end-1];const auto& b=s.samples[end];
@@ -73,15 +73,17 @@ inline double localDelta(const Session& s){
 inline Session loadCSV(const std::filesystem::path& path,bool metadataOnly=false){
  Session s;s.path=path;s.id=path.stem().string();s.game="AC";s.track=s.id;
  std::ifstream f(path);std::string row;if(!std::getline(f,row))return s;auto names=cells(row);std::map<std::string,size_t> cols;for(size_t i=0;i<names.size();++i)cols[names[i]]=i;
- size_t count=0;while(std::getline(f,row)&&count++<1000000){if(row.size()>16384)break;auto v=cells(row);if(v.size()<names.size())continue;
+ size_t count=0;int previousRaw=-1,previousStint=-1,lapOffset=0;while(std::getline(f,row)&&count++<1000000){if(row.size()>16384)break;auto v=cells(row);if(v.size()<names.size())continue;
   auto str=[&](const char* k){auto it=cols.find(k);return it!=cols.end()&&it->second<v.size()?v[it->second]:std::string();};
   auto n=[&](const char* k,double fallback=0.){try{auto a=str(k);if(a.empty())return fallback;double v=std::stod(a);return std::isfinite(v)&&std::abs(v)<1.e16?v:fallback;}catch(...){return fallback;}};
   auto integer=[&](const char* k,int fallback=0){double v=n(k,fallback);return v>=INT32_MIN&&v<=INT32_MAX?int(v):fallback;};
   Sample p;p.at=uint64_t(std::max(0.,n("capture_ms")));p.packet=integer("physics_packet",-1);p.lap=integer("lap");p.ms=integer("lap_ms");p.last=integer("last_lap_ms");p.best=integer("best_ms");p.sector=integer("sector",-1);p.lastSector=integer("last_sector_ms");p.valid=integer("valid",-1);p.progress=n("progress",NAN);p.speed=n("speed_kmh",NAN);p.gas=n("gas",NAN);p.brake=n("brake",NAN);p.steer=n("steer_native",NAN);p.x=n("world_x",NAN);p.z=n("world_z",NAN);p.pit=n("in_pit")!=0;p.gear=integer("gear_native");p.rpm=integer("rpm");for(int i=0;i<3;++i)p.splits[i]=integer(("s"+std::to_string(i+1)).c_str());
+  p.stint=integer("stint");int raw=p.lap;if(previousRaw>=0&&(p.stint!=previousStint||raw<previousRaw)&&!s.samples.empty())lapOffset=s.samples.back().lap+1-raw;previousRaw=raw;previousStint=p.stint;p.lap+=lapOffset;
   if(!str("game").empty())s.game=decode(str("game"));if(!str("track_id").empty())s.track=decode(str("track_id"));s.car=decode(str("car_id"));s.variant=decode(str("layout_id"));s.length=n("track_length_m");if(!str("steer_unit").empty())s.steerUnit=str("steer_unit");s.started=int64_t(n("started_utc_ms"));
   if(metadataOnly)break;
   if(p.lap>=0&&p.ms>=0&&p.ms<INT32_MAX&&std::isfinite(p.progress)&&p.progress>=0&&p.progress<=1)s.samples.push_back(p);
  }
+ if(!s.started){auto id=s.id;auto dash=id.find_last_of('-');auto underscore=id.find_last_of('_',dash);if(underscore!=std::string::npos)try{auto stamp=std::stoll(id.substr(underscore+1));if(stamp>1000000000000LL&&stamp<10000000000000LL)s.started=stamp;}catch(...){} }
  if(!metadataOnly)analyze(s);return s;
 }
 struct Recorder {

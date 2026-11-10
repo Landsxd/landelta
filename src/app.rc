@@ -14,11 +14,11 @@ BEGIN
   BLOCK "040904b0"
   BEGIN
    VALUE "CompanyName", "LANDELTA"
-   VALUE "FileDescription", "LANDELTA ACC Overlay - Beta"
+   VALUE "FileDescription", "LANDELTA Race Studio - Beta"
    VALUE "FileVersion", "0.14.0"
    VALUE "InternalName", "LANDELTA"
    VALUE "OriginalFilename", "LANDELTA.exe"
-   VALUE "ProductName", "LANDELTA ACC Overlay"
+   VALUE "ProductName", "LANDELTA Race Studio"
    VALUE "ProductVersion", "0.14.0"
   END
  END

@@ -30,7 +30,8 @@ void studioTick(uint64_t now){
   for(int i=0;i<std::min(60,std::max(0,shared.activeCars));++i)if(shared.carIds[i]==shared.player){s.x=shared.coordinates[i][0];s.z=shared.coordinates[i][2];break;}
   auto c=live.cars.find(shared.player);if(c!=live.cars.end())s.splits=c->second.current.splits;
   std::string track=live.track,car;acstudio::Static info{};if(studioStatic.data){memcpy(&info,studioStatic.data,sizeof info);car=acstudio::label(info.car);if(track.empty())track=acstudio::label(info.track);}
-  auto key=std::to_string(gamePID)+"/"+std::to_string(shared.session)+"/"+std::to_string(shared.sessionIndex)+"/"+std::to_string(live.epoch);
+  // UDP reconnection is not a new local session. Preserve the same recording.
+  auto key=std::to_string(gamePID)+"/"+std::to_string(shared.session)+"/"+std::to_string(shared.sessionIndex);
   auto& r=studioRecords[1];if(!r.session.samples.empty()&&r.key==key&&s.lap<r.session.samples.back().lap)r.close();
   if(!track.empty())r.add(s,key,"ACC",track,car,dataDir/L"studio-sessions",wallMs());
  }else{studioRecords[1].online=false;studioPhysics.close();studioStatic.close();if(!gameRunning)studioRecords[1].close();}
