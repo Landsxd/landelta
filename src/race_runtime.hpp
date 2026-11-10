@@ -1,8 +1,8 @@
 // Main-thread bridge. AC's existing full-rate CSV stays the source of truth.
 // ACC and iRacing record one CSV per detected session, independent of UI selection.
-#include "iracing.hpp"
+#include "iracing_feed.hpp"
 #include <future>
-race::Recorder studioRecords[3];iracing::Client irClient;
+race::Recorder studioRecords[3];iracing::Feed irFeed;iracing::Snapshot irClient;
 acstudio::Mapping studioPhysics,studioStatic;
 race::Session reviewed;bool reviewing=false,loadingSession=false;std::future<race::Session> loadJob;
 race::ReviewRequest reviewRequest;
@@ -36,9 +36,10 @@ void studioTick(uint64_t now){
   auto& r=studioRecords[1];if(!r.session.samples.empty()&&r.key==key&&race::restarted(r.session.samples.back(),s))r.close();
   if(!track.empty())r.add(s,key,"ACC",track,car,dataDir/L"studio-sessions",wallMs());
  }else{if(studioRecords[1].online)studioRecords[1].pause();studioPhysics.close();studioStatic.close();if(!gameRunning)studioRecords[1].close();}
- bool fresh=irClient.poll(now);if(fresh&&irClient.onTrack){auto& s=irClient.sample;studioRecords[2].add(s,irClient.identity+"/"+std::to_string(irClient.generation),"iRacing",irClient.state.track,irClient.car,dataDir/L"studio-sessions",wallMs());studioRecords[2].session.length=irClient.state.meters;}
- else if(!irClient.onTrack&&studioRecords[2].online)studioRecords[2].pause();
+ irClient=irFeed.read();if(irClient.onTrack&&!irClient.path.empty()&&acc::fresh(irClient.lastNew,now,250)){auto& s=irClient.sample;studioRecords[2].add(s,utf8(irClient.path.wstring()),"iRacing",irClient.state.track,irClient.car,{},wallMs(),false,irClient.path);studioRecords[2].session.length=irClient.state.meters;}
+ else if(studioRecords[2].online)studioRecords[2].pause();
  if(!irClient.connected)studioRecords[2].close();
+ studioRecords[2].error=irClient.error;
 }
 bool panelAllowed(int i){return i!=2&&i!=6&&(cfg.gameMode!=0||(i==3||i==4))&&(cfg.gameMode!=2||i!=5);}
 bool studioActive(){return cfg.gameMode==1?sessionVisibility.active:(cfg.gameMode==0?studioRecords[0].online:irClient.onTrack);}

@@ -25,7 +25,7 @@ struct Packet {
   std::string meta((const char*)bytes+header.sessionOffset,header.sessionLen);if(!meta.empty()&&meta.back()==0)meta.pop_back();
   // Reject torn rows and session metadata. Check after copies, not before.
   std::atomic_thread_fence(std::memory_order_seq_cst);Header after;memcpy(&after,bytes,sizeof after);
-  if(after.buffers[b].tick!=header.buffers[b].tick||after.sessionUpdate!=header.sessionUpdate||after.varOffset!=header.varOffset||after.bufferLen!=header.bufferLen||!(after.status&1))return false;
+  if(after.buffers[b].tick!=header.buffers[b].tick||after.sessionUpdate!=header.sessionUpdate||after.varOffset!=header.varOffset||after.numVars!=header.numVars||after.sessionLen!=header.sessionLen||after.sessionOffset!=header.sessionOffset||after.buffers[b].offset!=header.buffers[b].offset||after.bufferLen!=header.bufferLen||!(after.status&1))return false;
   h=header;tick=header.buffers[b].tick;vars=std::move(next);data=std::move(row);yaml=std::move(meta);return true;
  }
  double get(const std::string& name,int index=0,double missing=NAN)const{auto it=vars.find(name);if(it==vars.end()||index<0||index>=it->second.count)return missing;auto& v=it->second;const auto* p=data.data()+v.offset+index*width(v.type);switch(v.type){case 0:case 1:return *p;case 2:case 3:{int32_t a;memcpy(&a,p,4);return a;}case 4:{float a;memcpy(&a,p,4);return std::isfinite(a)?a:missing;}case 5:{double a;memcpy(&a,p,8);return std::isfinite(a)?a:missing;}}return missing;}
@@ -42,34 +42,52 @@ inline std::map<int,std::map<std::string,std::string>> drivers(const std::string
 }
 inline int milliseconds(double seconds){return std::isfinite(seconds)&&seconds>0&&seconds<INT32_MAX/1000.?int(seconds*1000+.5):0;}
 inline std::string sessionType(const std::string& yaml,int number){std::istringstream f(yaml);std::string line;bool selected=false;while(std::getline(f,line)){auto s=trim(line);if(s.rfind("- ",0)==0)s=s.substr(2);if(s.rfind("SessionNum:",0)==0){try{selected=std::stoi(trim(s.substr(11)))==number;}catch(...){selected=false;}}else if(selected&&s.rfind("SessionType:",0)==0)return trim(s.substr(12));}return {};}
+
+inline double sessionDelta(const Packet& p,bool driving){
+ if(!driving||p.get("SessionState",0,4)<4||p.get("OnPitRoad",0,0)!=0||p.get("IsReplayPlaying",0,0)!=0||p.get("LapDeltaToSessionBestLap_OK",0,0)!=1)return NAN;
+ double value=p.get("LapDeltaToSessionBestLap"),best=p.get("LapBestLapTime"),progress=p.get("LapDistPct");
+ if(!std::isfinite(value)||!std::isfinite(best)||best<=0||best>=INT32_MAX/1000.||!std::isfinite(progress)||progress<0||progress>1||p.get("Lap",0,0)<1)return NAN;
+ return std::abs(value)<INT32_MAX/1000.?value*1000:NAN;
+}
+inline double visibleDelta(const race::Sample& p,bool driving,uint64_t now,uint64_t lastNew){
+ return driving&&!p.pit&&lastNew&&now>=lastNew&&now-lastNew<=250?p.delta:NAN;
+}
+
+struct Quality {
+ int last=-1,expected=0;uint64_t start=0,count=0,missed=0;double hz=0;
+ void add(int tick,uint64_t now,int sdkHz){expected=sdkHz;if(last<0||tick<last){last=tick;start=now;count=0;hz=0;return;}if(tick==last)return;
+  missed+=uint64_t(std::max(0,tick-last-1));last=tick;++count;if(now>start&&now-start>=1000){hz=count*1000./(now-start);start=now;count=0;}}
+};
 #ifdef _WIN32
 struct Client {
- HANDLE mapping=nullptr;const uint8_t* view=nullptr;size_t size=0;Packet packet;acc::State state;race::Sample sample;
- uint64_t lastNew=0,lastOpen=0;int previousTick=-1;unsigned generation=0;bool connected=false,onTrack=false;std::string identity,car,error;
- void close(){if(view)UnmapViewOfFile(view);if(mapping)CloseHandle(mapping);view=nullptr;mapping=nullptr;connected=onTrack=false;size=0;previousTick=-1;state={};}
+ std::wstring mappingName=L"Local\\IRSDKMemMapFileName";HANDLE mapping=nullptr;const uint8_t* view=nullptr;size_t size=0;Packet packet;acc::State state;race::Sample sample;
+ Quality quality;uint64_t lastNew=0,lastOpen=0;int previousTick=-1;unsigned generation=0;bool connected=false,onTrack=false;std::string identity,car,error;
+ void close(){if(view)UnmapViewOfFile(view);if(mapping)CloseHandle(mapping);view=nullptr;mapping=nullptr;connected=onTrack=false;size=0;previousTick=-1;state={};sample={};}
  ~Client(){close();}
  bool poll(uint64_t now){
-  if(!view){if(now-lastOpen<1000)return false;lastOpen=now;mapping=OpenFileMappingW(FILE_MAP_READ,FALSE,L"Local\\IRSDKMemMapFileName");if(!mapping)return false;view=(const uint8_t*)MapViewOfFile(mapping,FILE_MAP_READ,0,0,0);MEMORY_BASIC_INFORMATION info{};if(!view||!VirtualQuery(view,&info,sizeof info)){close();return false;}size=info.RegionSize;}
+  if(!view){if(now-lastOpen<1000)return false;lastOpen=now;mapping=OpenFileMappingW(FILE_MAP_READ,FALSE,mappingName.c_str());if(!mapping)return false;view=(const uint8_t*)MapViewOfFile(mapping,FILE_MAP_READ,0,0,0);MEMORY_BASIC_INFORMATION info{};if(!view||!VirtualQuery(view,&info,sizeof info)){close();return false;}size=info.RegionSize;}
   if(!packet.read(view,size)){if(now-(lastNew?lastNew:lastOpen)>3000)close();return false;}
   if(packet.tick==previousTick){if(lastNew&&now-lastNew>3000){error="Telemetría detenida; reconectando";close();}return false;}
-  bool rewind=previousTick>=0&&packet.tick<previousTick;previousTick=packet.tick;lastNew=now;connected=true;error.clear();
+  bool rewind=previousTick>=0&&packet.tick<previousTick;previousTick=packet.tick;lastNew=now;connected=true;error.clear();quality.add(packet.tick,now,packet.h.hz);
   int sn=int(packet.get("SessionNum",0,-1));auto key=field(packet.yaml,"SessionID")+"/"+field(packet.yaml,"SubSessionID")+"/"+std::to_string(sn)+"/"+field(packet.yaml,"TrackName");
-  if(identity!=key||rewind){state={};identity=key;++generation;}
+  if(identity!=key||rewind){state={};quality={};quality.add(packet.tick,now,packet.h.hz);identity=key;car.clear();++generation;}
   state.track=field(packet.yaml,"TrackDisplayName");if(state.track.empty())state.track=field(packet.yaml,"TrackName");
   try{state.meters=int(std::stod(field(packet.yaml,"TrackLength"))*1000);}catch(...){state.meters=0;}
   state.registered=state.hasSession=true;state.session=sn;state.epoch=generation;state.sessionReceived=state.received=now;
   state.focus=int(packet.get("PlayerCarIdx",0,-1));state.replay=packet.get("IsReplayPlaying",0,0)!=0;
-  onTrack=packet.get("IsOnTrack",0,0)!=0&&!state.replay;
+  onTrack=packet.get("IsOnTrack",0,0)==1&&!state.replay&&packet.get("IsOnTrackCar",0,1)==1;
   int phase=int(packet.get("SessionState",0,0));state.phase=phase>=4?5:phase;
   auto type=sessionType(packet.yaml,sn);state.type=type=="Race"?10:(type.find("Qual")!=std::string::npos?4:0);
   state.elapsed=float(packet.get("SessionTime",0,0)*1000);state.end=state.elapsed+float(packet.get("SessionTimeRemain",0,0)*1000);
-  auto metadata=drivers(packet.yaml);for(auto& item:metadata){int id=item.first;double progress=packet.get("CarIdxLapDistPct",id);if(!std::isfinite(progress)||progress<0||progress>1)continue;
+  auto metadata=drivers(packet.yaml);for(auto& item:metadata){int id=item.first;
+   if(packet.get("CarIdxTrackSurface",id,3)<0){state.cars.erase(id);state.passages.erase(id);continue;}
+   double progress=packet.get("CarIdxLapDistPct",id);if(!std::isfinite(progress)||progress<0||progress>1)continue;
    auto& c=state.cars[id];c.id=id;c.team=item.second["UserName"];try{c.number=std::stoi(item.second["CarNumber"]);}catch(...){c.number=0;}c.position=int(packet.get("CarIdxPosition",id,0));c.spline=float(progress);c.laps=std::max(0,int(packet.get("CarIdxLapCompleted",id,0)));c.location=packet.get("CarIdxOnPitRoad",id,0)?2:1;c.last.ms=milliseconds(packet.get("CarIdxLastLapTime",id));c.best.ms=milliseconds(packet.get("CarIdxBestLapTime",id));c.seen=now;state.passages[id].add(c,now);
    if(id==state.focus)car=item.second["CarScreenName"];
   }
   race::Sample p;p.at=now;p.packet=packet.tick;p.lap=int(packet.get("Lap",0,0));p.ms=milliseconds(packet.get("LapCurrentLapTime"));p.last=milliseconds(packet.get("LapLastLapTime"));p.best=milliseconds(packet.get("LapBestLapTime"));p.progress=packet.get("LapDistPct");p.gas=packet.get("Throttle");p.brake=packet.get("Brake");p.speed=packet.get("Speed")*3.6;p.steer=packet.get("SteeringWheelAngle");p.gear=int(packet.get("Gear",0,0));p.rpm=int(packet.get("RPM",0,0));p.pit=packet.get("OnPitRoad",0,0)!=0;p.x=packet.get("Lon");p.z=packet.get("Lat");
   // Incident counts are not an official per-lap validity flag.
-  p.valid=-1;if(packet.get("LapDeltaToBestLap_OK",0,0))p.delta=packet.get("LapDeltaToBestLap")*1000;sample=p;return true;
+  p.valid=-1;p.sourceHz=quality.expected;p.missedTicks=quality.missed;p.delta=sessionDelta(packet,onTrack);sample=p;return true;
  }
 };
 #endif

@@ -80,16 +80,16 @@ struct State {
  }catch(const std::exception& e){badPackets++;parseError=e.what();return -1;}}
  std::vector<Car> active(uint64_t now,bool paused=false)const {std::vector<Car> v;for(auto& kv:cars)if(fresh(kv.second.seen,now)||(paused&&kv.second.seen))v.push_back(kv.second);std::sort(v.begin(),v.end(),[](const Car&a,const Car&b){int pa=a.position?a.position:INT32_MAX,pb=b.position?b.position:INT32_MAX;return pa==pb?a.id<b.id:pa<pb;});return v;}
  double passage(int id,double progress)const{auto it=passages.find(id);return it==passages.end()?NAN:it->second.at(progress);}
- double relativeEstimate(const Car& other,const Car& me)const;
- std::string gapToLeader(const Car& c,const Car& leader)const;
+ double relativeEstimate(const Car& other,const Car& me,bool fallback=true)const;
+ std::string gapToLeader(const Car& c,const Car& leader,bool fallback=true)const;
 };
 inline double lapSeconds(const Car& c){int m=c.last.ms&&c.last.valid&&!c.last.invalid&&!c.last.in&&!c.last.out?c.last.ms:c.best.ms;return m?m/1000.0:0;}
 // Physical neighbors on circuit, not race position. Negative = ahead, positive = behind.
 inline double relativeGap(const Car& other,const Car& me){double d=double(other.spline)-me.spline;while(d>.5)d-=1;while(d<-.5)d+=1;double sec=lapSeconds(me);if(!sec)sec=lapSeconds(other);return sec?-d*sec:NAN;}
-inline double State::relativeEstimate(const Car& other,const Car& me)const{
+inline double State::relativeEstimate(const Car& other,const Car& me,bool fallback)const{
  double d=double(other.spline)-me.spline;while(d>.5)d-=1;while(d<-.5)d+=1;
  if(!replay&&other.location==1&&me.location==1){double at=d>=0?passage(other.id,other.laps+double(other.spline)-d):passage(me.id,me.laps+double(me.spline)+d);double gap=d>=0?-(double(me.seen)-at)/1000.:(double(other.seen)-at)/1000.;if(std::isfinite(gap)&&((d>=0&&gap<=0)||(d<0&&gap>=0)))return gap;}
- return relativeGap(other,me);
+ return fallback?relativeGap(other,me):NAN;
 }
 // Compare total progress, so two same-lap cars straddling the finish stay neutral.
 // -1 = lapped by the player (blue), +1 = lapping the player (amber).
@@ -97,12 +97,12 @@ inline int lapRelation(const Car& other,const Car& me,bool race){if(!race||other
 enum class PenaltyBadge {None,Confirmed,Notice};
 inline PenaltyBadge penaltyBadge(const Car& c,uint64_t now,bool playerData=false,int penalty=0){if(playerData&&penalty>=0)return penalty>0?PenaltyBadge::Confirmed:PenaltyBadge::None;return c.penaltyNoticeAt&&now>=c.penaltyNoticeAt&&now-c.penaltyNoticeAt<60000?PenaltyBadge::Notice:PenaltyBadge::None;}
 inline std::string raceGap(const Car& c,const Car& leader,bool race){char b[64];if(c.id==leader.id)return "LIDER";if(!race){if(!c.best.ms||!leader.best.ms)return "--";snprintf(b,sizeof b,"%+.3f",(c.best.ms-leader.best.ms)/1000.);return b;}double d=double(leader.laps)+leader.spline-c.laps-c.spline;if(d>=1.0){return "+"+std::to_string((int)std::floor(d))+" V";}double sec=lapSeconds(leader);if(!sec)return "--";snprintf(b,sizeof b,"~+%.1f",std::max(0.,d*sec));return b;}
-inline std::string State::gapToLeader(const Car& c,const Car& leader)const{
+inline std::string State::gapToLeader(const Car& c,const Car& leader,bool fallback)const{
  if(!c.position||!leader.position)return "--";
  if(type!=10||c.id==leader.id)return raceGap(c,leader,type==10);if(phase<5)return "--";
  double d=leader.laps+double(leader.spline)-c.laps-c.spline;if(d<-.01)return "--";if(d>=1)return "+"+std::to_string(int(std::floor(d)))+" V";
  if(!replay){double at=passage(leader.id,c.laps+double(c.spline));double sec=(double(c.seen)-at)/1000.;if(std::isfinite(sec)&&sec>=0){char b[48];snprintf(b,sizeof b,"~+%.1f",sec);return b;}}
- return raceGap(c,leader,true);
+ return fallback?raceGap(c,leader,true):"--";
 }
 #pragma pack(push,4)
 struct Graphics {

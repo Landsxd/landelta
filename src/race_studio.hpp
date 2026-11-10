@@ -17,7 +17,7 @@ namespace race {
 struct Sample {
  uint64_t at=0; int packet=-1,lap=0,ms=0,last=0,best=0,sector=-1,lastSector=0,valid=-1,stint=0;
  double progress=NAN,speed=NAN,gas=NAN,brake=NAN,steer=NAN,x=NAN,z=NAN,delta=NAN;
- bool pit=false; int gear=0,rpm=0; std::array<int,3> splits{};
+ bool pit=false; int gear=0,rpm=0,sourceHz=0;uint64_t missedTicks=0; std::array<int,3> splits{};
 };
 struct Lap {
  int number=0,ms=0,valid=-1; bool complete=false,pit=false,partial=true;
@@ -74,7 +74,7 @@ inline void analyze(Session& s){
     if(updated||stableSame){l.ms=p.last;l.complete=true;}
    }
    if(l.complete&&a.progress>.9&&b.progress<.1&&b.at>=a.at&&b.at-a.at<=500)crossing[10]=l.ms;
-   if(l.complete&&l.sectors[0]&&l.sectors[1]&&l.ms>l.sectors[0]+l.sectors[1])l.sectors[2]=l.ms-l.sectors[0]-l.sectors[1];
+   if(l.complete&&l.sectors[0]&&l.sectors[1]&&int64_t(l.ms)>int64_t(l.sectors[0])+l.sectors[1])l.sectors[2]=l.ms-l.sectors[0]-l.sectors[1];
   }
   for(int k=0;k<10;++k)if(std::isfinite(crossing[k])&&std::isfinite(crossing[k+1])&&crossing[k+1]>=crossing[k])l.micro[k]=crossing[k+1]-crossing[k];
   s.laps.push_back(l);previousNumber=l.number;start=end;
@@ -93,7 +93,7 @@ inline Session loadCSV(const std::filesystem::path& path,bool metadataOnly=false
   auto n=[&](const char* k,double fallback=0.){try{auto a=str(k);if(a.empty())return fallback;double v=std::stod(a);return std::isfinite(v)&&std::abs(v)<1.e16?v:fallback;}catch(...){return fallback;}};
   auto integer=[&](const char* k,int fallback=0){double v=n(k,fallback);return v>=INT32_MIN&&v<=INT32_MAX?int(v):fallback;};
   Sample p;p.at=uint64_t(std::max(0.,n("capture_ms")));p.packet=integer("physics_packet",-1);p.lap=integer("lap");p.ms=integer("lap_ms");p.last=integer("last_lap_ms");p.best=integer("best_ms");p.sector=integer("sector",-1);p.lastSector=integer("last_sector_ms");p.valid=integer("valid",-1);p.progress=n("progress",NAN);p.speed=n("speed_kmh",NAN);p.gas=n("gas",NAN);p.brake=n("brake",NAN);p.steer=n("steer_native",NAN);p.delta=n("delta_ms",NAN);p.x=n("world_x",NAN);p.z=n("world_z",NAN);p.pit=n("in_pit")!=0;p.gear=integer("gear_native");p.rpm=integer("rpm");for(int i=0;i<3;++i)p.splits[i]=integer(("s"+std::to_string(i+1)).c_str());
-  p.stint=integer("stint");int raw=p.lap;if(previousRaw>=0&&(p.stint!=previousStint||raw<previousRaw)&&!s.samples.empty())lapOffset=s.samples.back().lap+1-raw;previousRaw=raw;previousStint=p.stint;p.lap+=lapOffset;
+  p.sourceHz=integer("sdk_hz");p.missedTicks=uint64_t(std::max(0.,n("missed_ticks")));p.stint=integer("stint");int raw=p.lap;if(previousRaw>=0&&(p.stint!=previousStint||raw<previousRaw)&&!s.samples.empty())lapOffset=s.samples.back().lap+1-raw;previousRaw=raw;previousStint=p.stint;p.lap+=lapOffset;
   if(!str("game").empty())s.game=decode(str("game"));if(!str("track_id").empty())s.track=decode(str("track_id"));s.car=decode(str("car_id"));s.variant=decode(str("layout_id"));s.length=n("track_length_m");if(!str("steer_unit").empty())s.steerUnit=str("steer_unit");s.started=int64_t(n("started_utc_ms"));
   if(metadataOnly)break;
   if(p.lap>=0&&p.ms>=0&&p.ms<INT32_MAX&&std::isfinite(p.progress)&&p.progress>=0&&p.progress<=1)s.samples.push_back(p);
@@ -102,19 +102,19 @@ inline Session loadCSV(const std::filesystem::path& path,bool metadataOnly=false
  if(!metadataOnly)analyze(s);return s;
 }
 struct Recorder {
- Session session;std::string key,error;std::ofstream file;uint64_t lastFlush=0,lastAnalysis=0;bool online=false,dirty=false;int lastPacket=-1;
+ Session session;std::string key,error;std::ofstream file;uint64_t lastFlush=0,lastAnalysis=0;bool online=false,dirty=false,retainSamples=true;int lastPacket=-1;
  void pause(){if(dirty){analyze(session);dirty=false;}if(file.is_open()){file.flush();if(!file)error="No se pudo guardar la sesión";}online=false;}
  void close(){pause();if(file.is_open())file.close();key.clear();lastPacket=-1;}
  void add(const Sample& p,const std::string& identity,const std::string& game,const std::string& track,const std::string& car,const std::filesystem::path& folder,int64_t wall,bool persist=true,const std::filesystem::path& original={}){
   if(p.lap<0||p.ms<0||p.ms>=INT32_MAX||!std::isfinite(p.progress)||p.progress<0||p.progress>1)return;
   if(identity!=key){close();session={};lastFlush=lastAnalysis=0;key=identity;session.game=game;session.track=track;session.car=car;session.started=wall;session.id=safe(track)+"_"+game+"_"+std::to_string(wall);session.steerUnit=game=="iRacing"?"rad":"native";session.path=original;
-   if(persist){try{std::filesystem::create_directories(folder);session.path=folder/(session.id+".csv");file.open(session.path);file.imbue(std::locale::classic());file<<std::setprecision(12);file<<"capture_ms,physics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,world_x,world_z,sector,last_sector_ms,in_pit,valid,s1,s2,s3,game,track_id,car_id,layout_id,track_length_m,steer_unit,started_utc_ms,best_ms,delta_ms,stint\n";if(!file)error="No se pudo crear la sesión";}catch(...){error="No se pudo crear la sesión";}}
+   if(persist){try{std::filesystem::create_directories(folder);session.path=folder/(session.id+".csv");file.open(session.path);file.imbue(std::locale::classic());file<<std::setprecision(12);file<<"capture_ms,physics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,world_x,world_z,sector,last_sector_ms,in_pit,valid,s1,s2,s3,game,track_id,car_id,layout_id,track_length_m,steer_unit,started_utc_ms,best_ms,delta_ms,stint,sdk_hz,missed_ticks\n";if(!file)error="No se pudo crear la sesión";}catch(...){error="No se pudo crear la sesión";}}
   }
   online=true;if(p.packet>=0&&p.packet==lastPacket)return;lastPacket=p.packet;
-  if(session.samples.size()<1000000){session.samples.push_back(p);dirty=true;}else error="Límite de memoria de gráficas; los datos continúan guardándose";
-  if(file.is_open()){file<<p.at<<','<<p.packet<<','<<p.lap<<','<<p.ms<<','<<p.last<<','<<p.progress<<','<<p.speed<<','<<p.gas<<','<<p.brake<<','<<p.steer<<','<<p.gear<<','<<p.rpm<<','<<p.x<<','<<p.z<<','<<p.sector<<','<<p.lastSector<<','<<p.pit<<','<<p.valid;for(int v:p.splits)file<<','<<v;file<<','<<encode(game)<<','<<encode(track)<<','<<encode(car)<<','<<encode(session.variant)<<','<<session.length<<','<<session.steerUnit<<','<<session.started<<','<<p.best<<','<<p.delta<<','<<p.stint<<'\n';
+  if(retainSamples&&session.samples.size()<1000000){session.samples.push_back(p);dirty=true;}else if(retainSamples)error="Límite de memoria de gráficas; los datos continúan guardándose";
+  if(file.is_open()){file<<p.at<<','<<p.packet<<','<<p.lap<<','<<p.ms<<','<<p.last<<','<<p.progress<<','<<p.speed<<','<<p.gas<<','<<p.brake<<','<<p.steer<<','<<p.gear<<','<<p.rpm<<','<<p.x<<','<<p.z<<','<<p.sector<<','<<p.lastSector<<','<<p.pit<<','<<p.valid;for(int v:p.splits)file<<','<<v;file<<','<<encode(game)<<','<<encode(track)<<','<<encode(car)<<','<<encode(session.variant)<<','<<session.length<<','<<session.steerUnit<<','<<session.started<<','<<p.best<<','<<p.delta<<','<<p.stint<<','<<p.sourceHz<<','<<p.missedTicks<<'\n';
    if(p.at-lastFlush>=1000){file.flush();lastFlush=p.at;if(!file)error="Error al guardar: revisa espacio y permisos";}}
-  if(p.at-lastAnalysis>=1000||session.laps.empty()){analyze(session);lastAnalysis=p.at;dirty=false;}
+  if(retainSamples&&(p.at-lastAnalysis>=1000||session.laps.empty())){analyze(session);lastAnalysis=p.at;dirty=false;}
  }
  ~Recorder(){try{close();}catch(...){}}
 };

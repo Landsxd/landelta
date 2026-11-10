@@ -4,13 +4,13 @@
 
 **Tu sesión, tus tiempos y tu telemetría en una sola app.**
 
-Beta **0.14.1** para Windows 10/11 x64. AC, ACC e integración **experimental de iRacing**. Aplicación nativa C++17, local, sin cuenta ni suscripción.
+Beta **0.14.2** para Windows 10/11 x64. AC, ACC e integración **experimental de iRacing**. Aplicación nativa C++17, local, sin cuenta ni suscripción.
 
 ## Descargar
 
-La rama `feature/ac-studio` genera **LANDELTA-Setup-0.14.1.exe** en el artefacto `LANDELTA-Installer-0.14.1` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Es un único instalador: no necesitas descargar código fuente, scripts ni archivos de demo.
+La rama `feature/ac-studio` genera **LANDELTA-Setup-0.14.2.exe** en el artefacto `LANDELTA-Installer-0.14.2` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Es un único instalador: no necesitas descargar código fuente, scripts ni archivos de demo.
 
-La publicación histórica v0.12.3 no contiene Race Studio ni iRacing. Comprueba **0.14.1** en la ventana de la app.
+La publicación histórica v0.12.3 no contiene Race Studio ni iRacing. Comprueba **0.14.2** en la ventana de la app.
 
 1. Sal de la copia anterior desde el icono junto al reloj; la X solo la deja en segundo plano.
 2. Ejecuta el instalador. Conserva ajustes, historial y grabaciones.
@@ -25,7 +25,7 @@ La publicación histórica v0.12.3 no contiene Race Studio ni iRacing. Comprueba
 | Sesión | Pista, coche, trazado registrado al conducir, vuelta actual, última y mejor registrada; tabla de vueltas y sectores; exportación PNG. |
 | Telemetría | Gráficas de velocidad, freno, acelerador y volante por distancia; cursor de valores; comparación con otra vuelta; sectores o 10 microsectores. |
 | Mis sesiones | Sesiones guardadas por juego y fecha; abre datos anteriores sin navegar por carpetas. |
-| Tu pantalla | Miniatura del escritorio virtual, movimiento de overlays y distribución independiente por juego. |
+| Tu pantalla | Selector de monitores independientes, movimiento de overlays y distribución por juego. |
 | Ajustes | Conexión, captura AC, inicio con Windows, visibilidad, fondo y filas de clasificación. |
 
 **Exportar sesión ZIP** incluye las muestras CSV originales, resumen de vueltas CSV y metadatos JSON. Los archivos siguen guardándose localmente, pero su acceso normal se hace desde LANDELTA.
@@ -42,14 +42,18 @@ Se retiran del overlay **Ritmo / alcance** y **Vuelta / sectores**. Los tiempos 
 
 ## Precisión y límites
 
-- ACC/iRacing: captura de hasta **10 muestras nuevas/s** en esta beta. No equivale a registrar todos los ticks del simulador; los tiempos conservan los milisegundos que informa el juego.
+- iRacing: grabador independiente guiado por el evento del SDK, sin depender del refresco de la ventana. La app muestra la frecuencia medida, la frecuencia anunciada por el SDK y los ticks no observados. No garantiza cero pérdidas; los CSV incluyen `sdk_hz` y `missed_ticks`.
+- El delta de iRacing usa exclusivamente **la mejor vuelta de esta sesión** que el SDK declara disponible. Sin referencia, en boxes, replay o con muestras detenidas, queda vacío. No se sustituye por un delta local.
+- Los intervalos iRacing requieren pasos observados en pista; no se deducen multiplicando distancia por una vuelta supuesta. Pueden faltar hasta tener suficiente evidencia.
+- ACC conserva captura de hasta **10 muestras nuevas/s**; no es la frecuencia completa de física. Los tiempos conservan los milisegundos que informa el juego.
+- En directo, iRacing muestra una vista reducida; abre la sesión guardada para analizar las muestras originales.
 - AC conserva el CSV de su grabador existente; el directo es una vista reducida y al abrir la sesión se cargan las muestras originales.
 - Los microsectores son estimaciones interpoladas por distancia. Los huecos o cruces por meta sin evidencia suficiente quedan vacíos.
 - Volante: unidades nativas en AC/ACC; radianes en iRacing. Pedales: entrada aplicada, no fuerza física del pie.
 - Los datos no disponibles permanecen desconocidos. No se deduce validez de iRacing a partir de incidentes ni se inventan sectores oficiales.
 - El trazado necesita coordenadas y se construye al conducir; no es un mapa precargado.
 - El historial antiguo de ACC contiene tiempos, pero no puede recuperar telemetría que nunca se grabó.
-- [Cambios y límites completos de 0.14.1](docs/RELEASE-0.14.1.md).
+- [Cambios y límites completos de 0.14.2](docs/RELEASE-0.14.2.md).
 
 **Validación:** pruebas de lógica, compilación, capturas nativas y comprobación del instalador. Falta validar esta beta conduciendo en AC/ACC/iRacing, especialmente práctica → clasificación → carrera, pausa/reanudación y varios monitores. No se presenta como una versión ya validada en pista.
 
