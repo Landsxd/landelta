@@ -4,13 +4,13 @@
 
 **Tu sesión, tus tiempos y tu telemetría en una sola app.**
 
-Beta **0.14.0** para Windows 10/11 x64. AC, ACC e integración **experimental de iRacing**. Aplicación nativa C++17, local, sin cuenta ni suscripción.
+Beta **0.14.1** para Windows 10/11 x64. AC, ACC e integración **experimental de iRacing**. Aplicación nativa C++17, local, sin cuenta ni suscripción.
 
 ## Descargar
 
-La rama `feature/ac-studio` genera **LANDELTA-Setup-0.14.0.exe** en el artefacto `LANDELTA-Installer-0.14.0` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Es un único instalador: no necesitas descargar código fuente, scripts ni archivos de demo.
+La rama `feature/ac-studio` genera **LANDELTA-Setup-0.14.1.exe** en el artefacto `LANDELTA-Installer-0.14.1` de [GitHub Actions](https://github.com/Landsxd/landelta/actions). Es un único instalador: no necesitas descargar código fuente, scripts ni archivos de demo.
 
-La publicación histórica v0.12.3 no contiene Race Studio ni iRacing. Comprueba **0.14.0** en la ventana de la app.
+La publicación histórica v0.12.3 no contiene Race Studio ni iRacing. Comprueba **0.14.1** en la ventana de la app.
 
 1. Sal de la copia anterior desde el icono junto al reloj; la X solo la deja en segundo plano.
 2. Ejecuta el instalador. Conserva ajustes, historial y grabaciones.
@@ -49,7 +49,7 @@ Se retiran del overlay **Ritmo / alcance** y **Vuelta / sectores**. Los tiempos 
 - Los datos no disponibles permanecen desconocidos. No se deduce validez de iRacing a partir de incidentes ni se inventan sectores oficiales.
 - El trazado necesita coordenadas y se construye al conducir; no es un mapa precargado.
 - El historial antiguo de ACC contiene tiempos, pero no puede recuperar telemetría que nunca se grabó.
-- [Cambios y límites completos de 0.14.0](docs/RELEASE-0.14.0.md).
+- [Cambios y límites completos de 0.14.1](docs/RELEASE-0.14.1.md).
 
 **Validación:** pruebas de lógica, compilación, capturas nativas y comprobación del instalador. Falta validar esta beta conduciendo en AC/ACC/iRacing, especialmente práctica → clasificación → carrera, pausa/reanudación y varios monitores. No se presenta como una versión ya validada en pista.
 

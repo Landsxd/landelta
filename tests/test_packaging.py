@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory(prefix='landelta-package-') as tmp:
 src = (root / 'src/main.cpp').read_text()
 assert 'Probar modo demo' not in src
 assert 'std::wstring(args).find(L"--demo")' not in src
-assert 'La versión 0.14.0 no se ha iniciado' in src
+assert 'La versión 0.14.1 no se ha iniciado' in src
 installer = (root / 'installer/landelta.iss').read_text()
 assert 'AppMutex=Local\\VortexACCOverlay' in installer
 assert 'PrivilegesRequired=lowest' in installer

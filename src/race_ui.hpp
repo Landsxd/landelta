@@ -1,11 +1,12 @@
 #include "session_zip.hpp"
 // Native, offline Race Studio. Uses exactly the same renderer in previews and EXE.
 int layoutDrag=-1;float dragDX=0,dragDY=0;bool layoutDirty=false,studioPreview=false;
+float draftScale=1,draftDelta=1;std::array<bool,PanelCount> draftVisible{};
 std::array<int,PanelCount> draftX{},draftY{};race::ScreenTransform screenMap;
 std::vector<std::pair<RectF,int>> layoutHits;
 const wchar_t* panelName(int i){const wchar_t* n[]={L"Clasificación",L"Relativos",L"",L"Pedales",L"Delta",L"Últimos sectores",L""};return n[i];}
-void beginLayout(){int left=studioPreview?0:GetSystemMetrics(SM_XVIRTUALSCREEN),top=studioPreview?0:GetSystemMetrics(SM_YVIRTUALSCREEN),width=studioPreview?1920:GetSystemMetrics(SM_CXVIRTUALSCREEN),height=studioPreview?1080:GetSystemMetrics(SM_CYVIRTUALSCREEN);width=std::max(1,width);height=std::max(1,height);for(int i=0;i<PanelCount;++i){int w=int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),h=int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1));draftX[i]=std::clamp(cfg.x[i],left,left+std::max(0,width-w));draftY[i]=std::clamp(cfg.y[i],top,top+std::max(0,height-h));}layoutDirty=false;layoutDrag=-1;}
-void studioSwitch(int mode){cfg.saveProfile();cfg.gameMode=mode;cfg.restoreProfile();reviewing=false;selectedLap=compareLap=-1;lapOffset=0;beginLayout();refreshCatalog();}
+void beginLayout(){draftScale=cfg.scale;draftDelta=cfg.deltaScale;for(int i=0;i<PanelCount;++i)draftVisible[i]=cfg.visible[i];int left=studioPreview?0:GetSystemMetrics(SM_XVIRTUALSCREEN),top=studioPreview?0:GetSystemMetrics(SM_YVIRTUALSCREEN),width=studioPreview?1920:GetSystemMetrics(SM_CXVIRTUALSCREEN),height=studioPreview?1080:GetSystemMetrics(SM_CYVIRTUALSCREEN);width=std::max(1,width);height=std::max(1,height);for(int i=0;i<PanelCount;++i){int w=int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),h=int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1));draftX[i]=std::clamp(cfg.x[i],left,left+std::max(0,width-w));draftY[i]=std::clamp(cfg.y[i],top,top+std::max(0,height-h));}layoutDirty=false;layoutDrag=-1;}
+void studioSwitch(int mode){reviewRequest.cancel();studioNotice.clear();cfg.saveProfile();cfg.gameMode=mode;cfg.restoreProfile();reviewing=false;selectedLap=compareLap=-1;lapOffset=0;beginLayout();refreshCatalog();}
 void label(Graphics& g,const std::wstring& s,float x,float y,float w=250,Color c=MUTED){text(g,s,x,y,w,22,12,c,FontStyleBold);}
 void metric(Graphics& g,const std::wstring& title,const std::wstring& value,float x,float y,float width,Color color=FG){fill(g,x,y,width,91,CARD);label(g,title,x+16,y+12,width-32);text(g,value,x+14,y+35,width-28,44,30,color,FontStyleBold);}
 std::wstring stateLabel(const race::Lap& l){if(!l.complete)return L"En curso / parcial";if(l.pit)return L"Boxes";if(l.partial)return L"Captura parcial";return l.valid==0?L"Inválida":(l.valid==1?L"Válida":L"Validez desconocida");}
@@ -60,10 +61,10 @@ void renderLayout(Graphics& g){
  screenMap={double(GetSystemMetrics(SM_XVIRTUALSCREEN)),double(GetSystemMetrics(SM_YVIRTUALSCREEN)),double(GetSystemMetrics(SM_CXVIRTUALSCREEN)),double(GetSystemMetrics(SM_CYVIRTUALSCREEN)),228,224,928,365};if(studioPreview)screenMap={0,0,1920,1080,228,224,928,365};if(screenMap.width<1||screenMap.height<1){screenMap.width=1920;screenMap.height=1080;}
  auto origin=screenMap.toMini(screenMap.left,screenMap.top);double k=screenMap.scale();fill(g,228,224,928,365,Color(255,8,12,10));fill(g,float(origin.first),float(origin.second),float(screenMap.width*k),float(screenMap.height*k),Color(255,19,27,23));
  Pen grid(Color(255,32,44,35),1);for(int j=1;j<12;++j){float x=float(origin.first+screenMap.width*k*j/12);g.DrawLine(&grid,x,float(origin.second),x,float(origin.second+screenMap.height*k));}for(int j=1;j<7;++j){float y=float(origin.second+screenMap.height*k*j/7);g.DrawLine(&grid,float(origin.first),y,float(origin.first+screenMap.width*k),y);}
- layoutHits.clear();for(int i=0;i<PanelCount;++i){if(!panelAllowed(i)||!cfg.visible[i])continue;auto p=screenMap.toMini(draftX[i],draftY[i]);float w=float(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)*k),h=float(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1)*k);RectF r(float(p.first),float(p.second),w,h);fill(g,r.X,r.Y,r.Width,r.Height,Color(255,42,65,30));Pen border(GREEN,1.5);g.DrawRectangle(&border,r);text(g,panelName(i),r.X+4,r.Y+2,r.Width-8,std::min(28.f,r.Height),std::min(14.f,std::max(9.f,r.Height*.4f)),FG,FontStyleBold);layoutHits.emplace_back(r,i);}
- float bx=228;for(int i=0;i<PanelCount;++i)if(panelAllowed(i)){button(g,panelName(i),bx,607,174,32,10+i,false,cfg.visible[i]);bx+=184;}
- button(g,L"− Tamaño",228,657,118,34,20);text(g,num(cfg.scale*100,0)+L" %",352,657,74,34,16,FG,FontStyleBold);button(g,L"+ Tamaño",432,657,118,34,21);button(g,L"Cancelar",680,657,130,38,230);button(g,L"Restablecer",822,657,148,38,231);button(g,L"Guardar distribución",982,657,174,38,232,true);
- text(g,layoutDirty?L"Cambios de posición sin guardar":L"Distribución guardada · Ctrl + Alt + F10 para mover paneles sobre el juego",228,710,928,28,14,layoutDirty?GOLD:MUTED);
+ layoutHits.clear();for(int i=0;i<PanelCount;++i){if(!panelAllowed(i)||!draftVisible[i])continue;auto p=screenMap.toMini(draftX[i],draftY[i]);float w=float(panelW(i)*draftScale*(i==4?draftDelta:1)*k),h=float(panelH(i)*draftScale*(i==4?draftDelta:1)*k);RectF r(float(p.first),float(p.second),w,h);fill(g,r.X,r.Y,r.Width,r.Height,Color(255,42,65,30));Pen border(GREEN,1.5);g.DrawRectangle(&border,r);text(g,panelName(i),r.X+4,r.Y+2,r.Width-8,std::min(28.f,r.Height),std::min(14.f,std::max(9.f,r.Height*.4f)),FG,FontStyleBold);layoutHits.emplace_back(r,i);}
+ float bx=228;for(int i=0;i<PanelCount;++i)if(panelAllowed(i)){button(g,panelName(i),bx,607,174,32,10+i,false,draftVisible[i]);bx+=184;}
+ button(g,L"− Tamaño",228,657,118,34,20);text(g,num(draftScale*100,0)+L" %",352,657,74,34,16,FG,FontStyleBold);button(g,L"+ Tamaño",432,657,118,34,21);button(g,L"Cancelar",680,657,130,38,230);button(g,L"Restablecer",822,657,148,38,231);button(g,L"Guardar distribución",982,657,174,38,232,true);
+ label(g,L"TAMAÑO DELTA",228,710,155);button(g,L"−",388,706,38,32,27);text(g,num(draftDelta*100,0)+L" %",436,706,80,32,16,FG);button(g,L"+",526,706,38,32,28);text(g,layoutDirty?L"Cambios sin guardar":L"Distribución guardada · F10 + Ctrl + Alt: mover",590,710,566,28,13,layoutDirty?GOLD:MUTED);
 }
 void renderSettings(Graphics& g){
  label(g,L"CONEXIÓN Y CAPTURA",228,155,700,GREEN);fill(g,228,193,928,126,CARD);
@@ -80,7 +81,7 @@ void renderSettings(Graphics& g){
  text(g,startupNotice,228,711,928,27,13,GOLD);
 }
 void renderControl(Graphics& g){
- g.Clear(BG);hits.clear();fill(g,0,0,200,780,Color(255,16,22,18));fill(g,18,25,4,35,GREEN);text(g,L"LANDELTA",32,20,161,35,24,FG,FontStyleBold);label(g,L"RACE STUDIO / 0.14.0",32,58,160,GREEN);
+ g.Clear(BG);hits.clear();fill(g,0,0,200,780,Color(255,16,22,18));fill(g,18,25,4,35,GREEN);text(g,L"LANDELTA",32,20,161,35,24,FG,FontStyleBold);label(g,L"RACE STUDIO / 0.14.1",32,58,160,GREEN);
  const wchar_t* nav[]={L"01   Sesión",L"02   Telemetría",L"03   Tu pantalla",L"04   Ajustes"};for(int i=0;i<4;++i){button(g,nav[i],16,122+i*51,168,41,200+i,studioPage==i,studioPage==i);}
  label(g,L"MIS SESIONES",20,354,160);button(g,L"Actualizar",20,383,160,30,210);int shown=0;
  for(int i=sessionOffset;i<int(catalog.size())&&shown<5;++i,++shown){float y=429+shown*49;button(g,L"",20,y,160,42,4000+i,false,reviewing&&reviewed.id==catalog[i].id);text(g,wide(catalog[i].track),27,y+2,146,20,12,FG,FontStyleBold);text(g,catalog[i].started?historyDate(catalog[i].started):L"Fecha desconocida",27,y+22,146,18,10,MUTED);}
@@ -95,21 +96,25 @@ void renderControl(Graphics& g){
 }
 void exportStudioCSV(){auto& s=currentSession();if(s.samples.empty()&&s.laps.empty()){studioNotice=L"Todavía no hay datos para exportar";return;}wchar_t name[32768]=L"LANDELTA-sesion.zip";OPENFILENAMEW d{};d.lStructSize=sizeof d;d.hwndOwner=control;d.lpstrFilter=L"Sesión ZIP\0*.zip\0\0";d.lpstrFile=name;d.nMaxFile=32768;d.lpstrDefExt=L"zip";d.Flags=OFN_OVERWRITEPROMPT|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;if(!GetSaveFileNameW(&d))return;try{for(auto& r:studioRecords)if(r.file.is_open())r.file.flush();race::Session exportSession=s;if(!s.path.empty())exportSession=race::loadCSV(s.path);race::exportZIP(exportSession,fs::path(name));studioNotice=L"ZIP exportado: muestras originales, vueltas y datos de sesión";}catch(const std::exception& e){studioNotice=wide(e.what());}}
 bool studioAction(int id){
+ if(id==202&&studioPage==2)return true; // Re-clicking this tab must not discard the draft.
+ if(studioPage==2&&id>=10&&id<10+PanelCount){draftVisible[id-10]=!draftVisible[id-10];layoutDirty=true;return true;}
+ if(studioPage==2&&(id==20||id==21||id==27||id==28)){if(id==20||id==21)draftScale=std::clamp(draftScale+(id==20?-.05f:.05f),.65f,1.6f);else draftDelta=std::clamp(draftDelta+(id==27?-.1f:.1f),.5f,2.5f);layoutDirty=true;return true;}
+ if(studioPage==2&&layoutDirty&&((id>=200&&id<=203&&id!=202)||(id>=240&&id<=242))&&MessageBoxW(control,L"¿Descartar los cambios de distribución sin guardar?",L"LANDELTA",MB_YESNO|MB_ICONQUESTION)!=IDYES)return true;
  if(id>=4000){selectSession(id-4000);return true;}
  if(id>=300&&id<4000){auto& s=currentSession();if(id-300<int(s.laps.size())){selectedLap=s.laps[id-300].number;studioPage=1;}return true;}
  if(id>=200&&id<=203){studioPage=id-200;if(studioPage==2)beginLayout();return true;}
  if(id>=240&&id<=242){studioSwitch(id-240);return true;}
- switch(id){case 210:refreshCatalog();break;case 211:sessionOffset=std::max(0,sessionOffset-5);break;case 212:if(sessionOffset+5<int(catalog.size()))sessionOffset+=5;break;case 213:reviewing=false;selectedLap=compareLap=-1;break;case 221:lapOffset=std::max(0,lapOffset-5);selectedLap=0;break;case 222:lapOffset+=5;selectedLap=0;break;
+ switch(id){case 210:refreshCatalog();break;case 211:sessionOffset=std::max(0,sessionOffset-5);break;case 212:if(sessionOffset+5<int(catalog.size()))sessionOffset+=5;break;case 213:reviewRequest.cancel();studioNotice.clear();reviewing=false;selectedLap=compareLap=-1;break;case 221:lapOffset=std::max(0,lapOffset-5);selectedLap=0;break;case 222:lapOffset+=5;selectedLap=0;break;
  case 223:case 224:{auto& l=currentSession().laps;for(size_t i=0;i<l.size();++i)if(l[i].number==selectedLap){int next=std::clamp(int(i)+(id==223?-1:1),0,int(l.size())-1);selectedLap=l[next].number;break;}break;}
  case 225:{if(compareLap>=0){compareLap=-1;break;}int best=0;for(auto& l:currentSession().laps)if(l.complete&&!l.partial&&!l.pit&&l.valid!=0&&l.number!=selectedLap&&l.ms&&(!best||l.ms<best)){best=l.ms;compareLap=l.number;}if(compareLap<0)studioNotice=L"Todavía no hay otra vuelta completa para comparar";break;}
  case 228:{auto& s=currentSession();acc::SessionRecord r;r.track=s.track;r.driver=s.car;r.started=s.started;for(auto& l:s.laps){acc::RecordedLap a;a.number=l.number;a.complete=l.complete&&!l.partial;a.pit=l.pit;a.timing.ms=l.ms;a.timing.splits=l.sectors;a.timing.valid=l.valid==1;a.timing.invalid=l.valid==0;r.laps.push_back(a);}exportHistoryImage(&r);break;}
  case 226:sectorMode=!sectorMode;break;case 227:exportStudioCSV();break;case 230:beginLayout();break;case 231:for(int i=0;i<PanelCount;++i){draftX[i]=int(screenMap.left)+Config{}.x[i];draftY[i]=int(screenMap.top)+Config{}.y[i];}layoutDirty=true;break;
- case 232:for(int i=0;i<PanelCount;++i){auto mini=screenMap.toMini(draftX[i],draftY[i]);auto pos=screenMap.toDesktop(mini.first,mini.second,int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1)));cfg.x[i]=draftX[i]=pos.first;cfg.y[i]=draftY[i]=pos.second;}locked=true;layoutDirty=false;studioNotice=L"Distribución aplicada y paneles bloqueados";break;default:return false;}return true;
+ case 232:cfg.scale=draftScale;cfg.deltaScale=draftDelta;for(int i=0;i<PanelCount;++i){cfg.visible[i]=draftVisible[i];auto mini=screenMap.toMini(draftX[i],draftY[i]);auto pos=screenMap.toDesktop(mini.first,mini.second,int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1)));cfg.x[i]=draftX[i]=pos.first;cfg.y[i]=draftY[i]=pos.second;}locked=true;layoutDirty=false;studioNotice=L"Distribución aplicada y paneles bloqueados";break;default:return false;}return true;
 }
 bool studioPointer(HWND h,UINT msg,float x,float y){
  if(msg==WM_MOUSEMOVE&&studioPage==1){graphCursor=x>=410&&x<=1138&&y>=209&&y<=628?(x-410)/728.:-1;InvalidateRect(h,nullptr,FALSE);}
  if(studioPage!=2)return false;
  if(msg==WM_LBUTTONDOWN){for(auto it=layoutHits.rbegin();it!=layoutHits.rend();++it)if(it->first.Contains(x,y)){layoutDrag=it->second;dragDX=x-it->first.X;dragDY=y-it->first.Y;SetCapture(h);return true;}}
- if(msg==WM_MOUSEMOVE&&layoutDrag>=0){int i=layoutDrag;auto p=screenMap.toDesktop(x-dragDX,y-dragDY,int(panelW(i)*cfg.scale*(i==4?cfg.deltaScale:1)),int(panelH(i)*cfg.scale*(i==4?cfg.deltaScale:1)));draftX[i]=p.first;draftY[i]=p.second;layoutDirty=true;InvalidateRect(h,nullptr,FALSE);return true;}
+ if(msg==WM_MOUSEMOVE&&layoutDrag>=0){int i=layoutDrag;auto p=screenMap.toDesktop(x-dragDX,y-dragDY,int(panelW(i)*draftScale*(i==4?draftDelta:1)),int(panelH(i)*draftScale*(i==4?draftDelta:1)));draftX[i]=p.first;draftY[i]=p.second;layoutDirty=true;InvalidateRect(h,nullptr,FALSE);return true;}
  if(msg==WM_LBUTTONUP&&layoutDrag>=0){layoutDrag=-1;ReleaseCapture();return true;}return false;
 }

@@ -5,6 +5,7 @@
 race::Recorder studioRecords[3];iracing::Client irClient;
 acstudio::Mapping studioPhysics,studioStatic;
 race::Session reviewed;bool reviewing=false,loadingSession=false;std::future<race::Session> loadJob;
+race::ReviewRequest reviewRequest;
 int studioPage=0,sessionOffset=0,lapOffset=0,selectedLap=-1,compareLap=-1,sectorMode=0;
 double graphCursor=-1;std::wstring studioNotice;std::vector<race::Session> catalog;
 const wchar_t* gameLabel(int mode){return mode==0?L"AC":(mode==1?L"ACC":L"iRacing");}
@@ -19,10 +20,10 @@ void refreshCatalog(){
  if(cfg.gameMode==1)for(const auto& r:analytics.history){race::Session s;s.id=r.id;s.game="ACC";s.track=r.track;s.car=r.driver;s.started=r.started;for(const auto& l:r.laps){race::Lap a;a.number=l.number;a.ms=l.timing.ms;a.complete=l.complete;a.partial=!l.complete;a.pit=l.pit||l.timing.in||l.timing.out;a.valid=l.timing.invalid?0:(l.timing.valid?1:-1);a.sectors=l.timing.splits;s.laps.push_back(a);}catalog.push_back(std::move(s));}
  std::sort(catalog.begin(),catalog.end(),[](const auto& a,const auto& b){return a.started==b.started?a.id>b.id:a.started>b.started;});sessionOffset=0;
 }
-void selectSession(int index){if(index<0||index>=int(catalog.size())||loadingSession)return;auto s=catalog[index];selectedLap=compareLap=-1;lapOffset=0;if(s.path.empty()){reviewed=std::move(s);reviewing=true;return;}loadingSession=true;studioNotice=L"Abriendo sesión…";loadJob=std::async(std::launch::async,[p=s.path]{return race::loadCSV(p);});}
+void selectSession(int index){if(index<0||index>=int(catalog.size())||loadingSession)return;auto s=catalog[index];selectedLap=compareLap=-1;lapOffset=0;if(s.path.empty()){reviewed=std::move(s);reviewing=true;return;}loadingSession=true;reviewRequest.begin(cfg.gameMode);studioNotice=L"Abriendo sesión…";loadJob=std::async(std::launch::async,[p=s.path]{return race::loadCSV(p);});}
 void studioTick(uint64_t now){
- if(loadingSession&&loadJob.wait_for(std::chrono::milliseconds(0))==std::future_status::ready){try{reviewed=loadJob.get();reviewing=true;studioNotice=L"Sesión cargada";}catch(...){studioNotice=L"No se pudo abrir la sesión";}loadingSession=false;}
- auto ac=acstudio::studio.read();if(ac.first.active){auto& s=ac.first;studioRecords[0].add(s.frame,utf8(s.path.wstring())+"/"+std::to_string(s.stint),"AC",utf8(s.track),utf8(s.car),{},wallMs(),false,s.path);}else studioRecords[0].online=false;
+ if(loadingSession&&loadJob.wait_for(std::chrono::milliseconds(0))==std::future_status::ready){try{auto loaded=loadJob.get();if(reviewRequest.accepts(cfg.gameMode)){reviewed=std::move(loaded);reviewing=true;studioNotice=L"Sesión cargada";}}catch(...){if(reviewRequest.accepts(cfg.gameMode))studioNotice=L"No se pudo abrir la sesión";}loadingSession=false;}
+ auto ac=acstudio::studio.read();if(ac.first.active){auto& s=ac.first;studioRecords[0].add(s.frame,utf8(s.path.wstring())+"/"+std::to_string(s.stint),"AC",utf8(s.track),utf8(s.car),{},wallMs(),false,s.path);}else if(studioRecords[0].online)studioRecords[0].pause();
  if(gameRunning&&sharedOK&&shared.status==2&&!live.replay){
   studioPhysics.open(L"Local\\acpmf_physics",sizeof(acstudio::Physics));studioStatic.open(L"Local\\acpmf_static",sizeof(acstudio::Static));
   acstudio::Physics p{};bool physics=studioPhysics.read(p);race::Sample s;s.at=now;s.packet=physics?p.packet:shared.packet;s.lap=shared.laps+1;s.ms=shared.currentMs;s.last=shared.lastMs;s.best=shared.bestMs;s.progress=shared.spline;s.pit=shared.inPit||shared.inPitLane;s.valid=shared.valid?1:0;s.sector=shared.sector;s.lastSector=shared.lastSector;
@@ -34,9 +35,9 @@ void studioTick(uint64_t now){
   auto key=std::to_string(gamePID)+"/"+std::to_string(shared.session)+"/"+std::to_string(shared.sessionIndex);
   auto& r=studioRecords[1];if(!r.session.samples.empty()&&r.key==key&&race::restarted(r.session.samples.back(),s))r.close();
   if(!track.empty())r.add(s,key,"ACC",track,car,dataDir/L"studio-sessions",wallMs());
- }else{studioRecords[1].online=false;studioPhysics.close();studioStatic.close();if(!gameRunning)studioRecords[1].close();}
+ }else{if(studioRecords[1].online)studioRecords[1].pause();studioPhysics.close();studioStatic.close();if(!gameRunning)studioRecords[1].close();}
  bool fresh=irClient.poll(now);if(fresh&&irClient.onTrack){auto& s=irClient.sample;studioRecords[2].add(s,irClient.identity+"/"+std::to_string(irClient.generation),"iRacing",irClient.state.track,irClient.car,dataDir/L"studio-sessions",wallMs());studioRecords[2].session.length=irClient.state.meters;}
- else if(!irClient.onTrack)studioRecords[2].online=false;
+ else if(!irClient.onTrack&&studioRecords[2].online)studioRecords[2].pause();
  if(!irClient.connected)studioRecords[2].close();
 }
 bool panelAllowed(int i){return i!=2&&i!=6&&(cfg.gameMode!=0||(i==3||i==4))&&(cfg.gameMode!=2||i!=5);}
