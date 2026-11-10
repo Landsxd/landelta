@@ -1,5 +1,5 @@
 ; Per-user installation. Keep this AppId stable across future upgrades.
-#define AppVersion "0.13.5"
+#define AppVersion "0.14.0"
 [Setup]
 AppId={{B0498E99-D687-4838-A85F-372EF9BBCA40}
 AppName=LANDELTA

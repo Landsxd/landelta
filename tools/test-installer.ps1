@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$setup = (Resolve-Path 'dist/LANDELTA-Setup-0.13.5.exe').Path
+$setup = (Resolve-Path 'dist/LANDELTA-Setup-0.14.0.exe').Path
 $target = Join-Path $env:RUNNER_TEMP 'LANDELTA-install-test'
 $start = [Environment]::GetFolderPath('Startup')
 $startupLink = Join-Path $start 'LANDELTA-Auto.lnk'
@@ -19,7 +19,7 @@ function Install {
 Install
 Install # Reinstall/upgrade to same folder must keep one app and preserve data.
 $exe = Join-Path $target 'LANDELTA.exe'
-if ((Get-Item $exe).VersionInfo.ProductVersion -ne '0.13.5') { throw 'Wrong installed version' }
+if ((Get-Item $exe).VersionInfo.ProductVersion -ne '0.14.0') { throw 'Wrong installed version' }
 if (!(Test-Path (Join-Path $target 'tools\ac-analyzer.html'))) { throw 'Analyzer missing' }
 if ((Get-ChildItem (Join-Path $target 'assets\brands') -Filter '*.png').Count -ne 19) { throw 'Brand logos missing' }
 if (Get-ChildItem $target -Recurse -Include '*.bat','*.cpp','*.hpp','CAMBIOS*') { throw 'Development files leaked' }

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <iomanip>
+#include "race_studio.hpp"
 namespace acstudio {
 struct Mapping {
  HANDLE handle=nullptr;const void* data=nullptr;
@@ -16,7 +17,7 @@ inline DWORD process(){DWORD found=0;HANDLE h=CreateToolhelp32Snapshot(TH32CS_SN
  if(Process32FirstW(h,&e))do{if(!_wcsicmp(e.szExeFile,L"AC2-Win64-Shipping.exe")){found=0;break;}if(!_wcsicmp(e.szExeFile,L"acs.exe")||!_wcsicmp(e.szExeFile,L"acs_x86.exe"))found=e.th32ProcessID;}while(Process32NextW(h,&e));CloseHandle(h);return found;}
 template<size_t N>std::string label(const char16_t(&v)[N]){std::wstring w;for(auto c:v){if(!c)break;w.push_back(wchar_t(c));}return utf8(w);}
 struct Studio {
- struct Snapshot {std::wstring track,car;int lap=0,currentMs=0,lastMs=0;float gas=0,brake=0,speed=0;bool active=false;};
+ struct Snapshot {std::wstring track,car;int lap=0,currentMs=0,lastMs=0;float gas=0,brake=0,speed=0;bool active=false;race::Sample frame;fs::path path;int stint=0;};
  Snapshot snapshot;
  HWND window=nullptr,statusLabel=nullptr;std::thread worker;std::atomic<bool> running{false};std::mutex mutex;
  std::wstring status=L"Captura automática preparada";fs::path directory;uint64_t count=0;
@@ -26,7 +27,7 @@ struct Studio {
  ~Studio(){stop();}
  void capture(){
   Mapping physics,graphics,info;std::ofstream csv;DWORD pid=0;uint64_t check=0,flush=0,lastSample=0,opened=0,probe=0,displayAt=0;
-  int packet=-1,session=-1,segment=0;std::string identity;LapTracker tracker;
+  int packet=-1,session=-1,segment=0;std::string identity;LapTracker tracker;fs::path currentFile;
   auto finish=[&](){if(csv.is_open()){csv.flush();if(!csv)throw std::runtime_error("disk");csv.close();}packet=-1;tracker=LapTracker{};};
   try{fs::create_directories(directory);
    while(running){auto now=GetTickCount64();if(now-check>=1000){auto current=process();check=now;if(current!=pid){finish();physics.close();graphics.close();info.close();pid=current;identity.clear();}}
@@ -41,7 +42,7 @@ struct Studio {
     bool reset=key!=identity||session!=g.session;
     if(reset){finish();++segment;}if(!csv.is_open()){
      opened=now;auto base=safeName(track)+"_"+safeName(layout)+"_AC_"+std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())+"-"+std::to_string(++segment);
-     csv.open(directory/(base+".csv"),std::ios::out|std::ios::trunc);csv.imbue(std::locale::classic());csv<<std::setprecision(9);
+     currentFile=directory/(base+".csv");csv.open(currentFile,std::ios::out|std::ios::trunc);csv.imbue(std::locale::classic());csv<<std::setprecision(9);
      csv<<"capture_ms,physics_packet,graphics_packet,lap,lap_ms,last_lap_ms,progress,speed_kmh,gas,brake,steer_native,gear_native,rpm,fuel_l,acc_x_g,acc_y_g,acc_z_g,world_x,world_y,world_z,sector,last_sector_ms,in_pit,tyres_out,penalty_s,gap_ms,stint,raw_lap,track_id,car_id,layout_id,track_length_m,microsector_50,game_version,compound,abs_setting,tc_setting,auto_clutch,auto_blip,stability\n";
      identity=key;session=g.session;lastSample=0;count=0;
     }
@@ -50,7 +51,8 @@ struct Studio {
     for(float a:p.acceleration)csv<<','<<a;for(float x:g.coordinates)csv<<','<<x;
     csv<<','<<g.sector<<','<<g.lastSector<<','<<(g.pit||g.pitLane)<<','<<p.tyresOut<<','<<g.penalty<<','<<(lastSample?now-lastSample:0)<<','<<tracker.stint<<','<<g.laps+1<<','<<encoded(track)<<','<<encoded(car)<<','<<encoded(layout)<<','<<(std::isfinite(st.length)?st.length:0)<<','<<std::min(50,int(g.spline*50)+1)<<','<<encoded(label(st.version))<<','<<encoded(label(g.compound))<<','<<p.abs<<','<<p.tc<<','<<st.autoClutch<<','<<st.autoBlip<<','<<st.stability<<'\n';
     packet=p.packet;lastSample=now;++count;
-    if(now-displayAt>=100){std::lock_guard<std::mutex> lock(mutex);snapshot={wide(track),wide(car),recordedLap,g.currentMs,g.lastMs,p.gas,p.brake,p.speed,true};displayAt=now;}
+    if(now-displayAt>=100){std::lock_guard<std::mutex> lock(mutex);snapshot.track=wide(track);snapshot.car=wide(car);snapshot.lap=recordedLap;snapshot.currentMs=g.currentMs;snapshot.lastMs=g.lastMs;snapshot.gas=p.gas;snapshot.brake=p.brake;snapshot.speed=p.speed;snapshot.active=true;snapshot.path=currentFile;snapshot.stint=tracker.stint;
+     auto& f=snapshot.frame;f.at=now-opened;f.packet=p.packet;f.lap=recordedLap;f.ms=g.currentMs;f.last=g.lastMs;f.best=g.bestMs;f.progress=g.spline;f.speed=p.speed;f.gas=p.gas;f.brake=p.brake;f.steer=p.steer;f.x=g.coordinates[0];f.z=g.coordinates[2];f.gear=p.gear;f.rpm=p.rpm;f.pit=g.pit||g.pitLane;f.sector=g.sector;f.lastSector=g.lastSector;displayAt=now;}
     if(now-flush>=1000){csv.flush();if(!csv)throw std::runtime_error("disk");flush=now;double hz=now>opened?count*1000./(now-opened):0;
      message(L"GRABANDO · "+std::to_wstring(count)+L" muestras · "+std::to_wstring(int(hz))+L" Hz medios");}
     std::this_thread::sleep_for(std::chrono::milliseconds(10));

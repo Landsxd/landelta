@@ -24,12 +24,13 @@ int IsWindowVisible(int w){return windows[w];}
 void ShowWindow(int w,int mode){assert(mode==SW_HIDE||mode==SW_SHOWNOACTIVATE);windows[w]=mode!=SW_HIDE;++shows;}
 void SetTimer(int,int id,unsigned interval,void*){(id==1?mainTimer:inputTimer)=interval;}
 void KillTimer(int,int id){(id==1?mainTimer:inputTimer)=0;}
+bool overlayVisible(int i){return i!=2&&i!=6&&sessionVisibility.show(demoMode,cfg.hidden,cfg.visible[i],cfg.keepAfterRace);}
 void adjustPolling();bool hideControl(){windows[8]=false;return true;}
 '''
 functions=s[s.index('void updateWindows(){'):s.index('NOTIFYICONDATAW trayData')]
 cases=r'''
 int main(){
- updateWindows();assert(!windows[1]&&!windows[4]&&mainTimer==1000&&inputTimer==0&&!windows[8]);
+ cfg.gameMode=1;updateWindows();assert(!windows[1]&&!windows[4]&&mainTimer==1000&&inputTimer==0&&!windows[8]);
  cfg.hidden=true;gameRunning=true;syncSessionVisibility(100);assert(!windows[1]&&mainTimer==100);
  sharedOK=true;shared.status=2;shared.sessionIndex=1;syncSessionVisibility(1000);assert(windows[1]&&windows[4]&&!windows[7]&&inputTimer==33&&locked&&!windows[8]);
  cfg.hidden=true;updateWindows();assert(!windows[1]&&!windows[4]&&inputTimer==0);syncSessionVisibility(1050);assert(!windows[1]);cfg.hidden=false;updateWindows();assert(windows[1]);
