@@ -20,7 +20,7 @@ void beginLayout(){readMonitors();draftScale=cfg.scale;draftDelta=cfg.deltaScale
 }
 void studioSwitch(int mode){reviewRequest.cancel();studioNotice.clear();cfg.saveProfile();cfg.gameMode=mode;cfg.restoreProfile();reviewing=false;selectedLap=compareLap=-1;lapOffset=0;beginLayout();refreshCatalog();}
 void label(Graphics& g,const std::wstring& s,float x,float y,float w=250,Color c=MUTED){text(g,s,x,y,w,22,12,c,FontStyleBold);}
-void metric(Graphics& g,const std::wstring& title,const std::wstring& value,float x,float y,float width,Color color=FG){fill(g,x,y,width,91,CARD);label(g,title,x+18,y+10,width-36);text(g,value,x+16,y+34,width-32,44,34,color,FontStyleRegular);if(color.ToARGB()==GREEN.ToARGB()){SolidBrush b(GREEN);g.FillRectangle(&b,x+width-36,y+17,17.f,3.f);}}
+void metric(Graphics& g,const std::wstring& title,const std::wstring& value,float x,float y,float width,Color color=FG){fill(g,x,y,width,91,CARD);label(g,title,x+18,y+10,width-36);text(g,value,x+16,y+34,width-32,44,34,color,FontStyleRegular);if(color.GetValue()==GREEN.GetValue()){SolidBrush b(GREEN);g.FillRectangle(&b,x+width-36,y+17,17.f,3.f);}}
 std::wstring stateLabel(const race::Lap& l){if(!l.complete)return L"En curso / parcial";if(l.pit)return L"Boxes";if(l.partial)return L"Captura parcial";return l.valid==0?L"Inválida":(l.valid==1?L"Válida":L"Validez desconocida");}
 void trackMap(Graphics& g,const race::Session& s,RectF r){
  fill(g,r.X,r.Y,r.Width,r.Height,CARD);label(g,L"TRAZADO REGISTRADO",r.X+16,r.Y+12,r.Width-32);
