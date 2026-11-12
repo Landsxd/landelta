@@ -2,8 +2,8 @@
 101 ICON "app.ico"
 1 RT_MANIFEST "app.manifest"
 1 VERSIONINFO
-FILEVERSION 0,13,0,0
-PRODUCTVERSION 0,13,0,0
+FILEVERSION 0,14,2,0
+PRODUCTVERSION 0,14,2,0
 FILEFLAGSMASK 0x3fL
 FILEFLAGS 0
 FILEOS VOS_NT_WINDOWS32
@@ -14,12 +14,12 @@ BEGIN
   BLOCK "040904b0"
   BEGIN
    VALUE "CompanyName", "LANDELTA"
-   VALUE "FileDescription", "LANDELTA ACC Overlay - Beta"
-   VALUE "FileVersion", "0.13.0-dev"
+   VALUE "FileDescription", "LANDELTA Race Studio - Beta"
+   VALUE "FileVersion", "0.14.2"
    VALUE "InternalName", "LANDELTA"
    VALUE "OriginalFilename", "LANDELTA.exe"
-   VALUE "ProductName", "LANDELTA ACC Overlay"
-   VALUE "ProductVersion", "0.13.0-dev"
+   VALUE "ProductName", "LANDELTA Race Studio"
+   VALUE "ProductVersion", "0.14.2"
   END
  END
  BLOCK "VarFileInfo"

@@ -4,7 +4,7 @@
 namespace acc {
 // One transform for painting and hit testing; keep fonts and icons proportional.
 struct ControlLayout {
- static constexpr int width=656,height=680,minWidth=492,minHeight=510;
+ static constexpr int width=1200,height=780,minWidth=960,minHeight=624;
  float scale=0,x=0,y=0;
  ControlLayout(int clientWidth,int clientHeight){
   if(clientWidth<=0||clientHeight<=0)return;

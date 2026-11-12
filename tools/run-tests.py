@@ -9,11 +9,13 @@ environment = dict(os.environ)
 environment["ASAN_OPTIONS"] = "detect_leaks=0"
 environment["UBSAN_OPTIONS"] = "halt_on_error=1"
 cpp_tests = (
-    "test_ac_capture", "test_telemetry", "test_analytics", "test_config_codec", "test_relatives",
+    "test_iracing_precision",
+    "test_studio_regressions",
+    "test_iracing", "test_race_studio", "test_car_brand", "test_ac_capture", "test_telemetry", "test_analytics", "test_config_codec", "test_relatives",
     "test_driving", "test_lap_delta", "test_background",
 )
 python_tests = (
-    "test_ac_analyzer",
+    "test_native_export", "test_ac_analyzer", "test_packaging", "test_session_export", "test_studio_ui",
     "test_connection_loop", "test_settings", "test_background_loop", "test_startup", "test_history_export", "test_control_window",
 )
 

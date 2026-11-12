@@ -20,8 +20,9 @@ int main(int argc,char**argv){settingsPath=fs::path(argv[1])/"settings.json";
  json old={{"schema",3},{"scale",1.1},{"backgroundOpacity",32},{"rows",12},{"panels",json::array({{{"x",25},{"y",90},{"visible",false}},{{"x",850},{"y",90},{"visible",true}},{{"x",850},{"y",700},{"visible",true}}})}};
  fileWrite(settingsPath,old.dump());loadSettings();assert(cfg.autoShow&&cfg.deltaScale==1&&!cfg.keepAfterRace);assert(cfg.rows==8&&cfg.x[1]==650&&cfg.y[2]==470&&!cfg.visible[0]);assert(cfg.opacity==32&&cfg.visible[3]&&cfg.visible[4]&&cfg.visible[5]&&!cfg.visible[6]);
  old["panels"][1]["x"]=123;old["panels"][1]["y"]=456;fileWrite(settingsPath,old.dump());loadSettings();assert(cfg.x[1]==123&&cfg.y[1]==456);
- for(int i=0;i<PanelCount;i++){cfg.x[i]=i*70;cfg.y[i]=i*80;cfg.visible[i]=i%2;}cfg.autoShow=false;cfg.deltaScale=1.8f;cfg.keepAfterRace=true;cfg.controlWidth=1200;cfg.controlHeight=900;cfg.controlMaximized=true;saveSettings();cfg={};loadSettings();assert(!cfg.autoShow&&cfg.keepAfterRace&&cfg.deltaScale==1.8f);assert(cfg.controlWidth==1200&&cfg.controlHeight==900&&cfg.controlMaximized);for(int i=0;i<PanelCount;i++){assert(cfg.x[i]==i*70&&cfg.y[i]==i*80&&cfg.visible[i]==bool(i%2));}
+ for(int i=0;i<PanelCount;i++){cfg.x[i]=i*70;cfg.y[i]=i*80;cfg.visible[i]=i%2;}cfg.autoShow=false;cfg.deltaScale=1.8f;cfg.keepAfterRace=true;cfg.controlWidth=1200;cfg.controlHeight=900;cfg.controlMaximized=true;saveSettings();cfg={};loadSettings();assert(!cfg.autoShow&&cfg.keepAfterRace&&cfg.deltaScale==1.8f);assert(cfg.controlWidth==1200&&cfg.controlHeight==900&&cfg.controlMaximized);for(int i=0;i<PanelCount;i++){assert(cfg.x[i]==i*70&&cfg.y[i]==i*80&&cfg.visible[i]==bool(i!=2&&i!=6&&i%2));}
  assert(json::parse(fileRead(settingsPath))["panels"].size()==7);
+ cfg.gameMode=1;cfg.x[0]=-300;cfg.scale=1.4f;saveSettings();cfg.gameMode=2;cfg.x[0]=900;cfg.scale=.8f;saveSettings();cfg={};loadSettings();assert(cfg.gameMode==2&&cfg.x[0]==900&&cfg.scale==.8f);cfg.gameMode=1;cfg.restoreProfile();assert(cfg.x[0]==-300&&cfg.scale==1.4f);
  std::cout<<"PASS: 3-to-7 panel migration, default positions, custom positions, visibility, opacity, persistence\n";
 }
 '''
